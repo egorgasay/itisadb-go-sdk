@@ -1,8 +1,8 @@
 package grpcisclient
 
 import (
+	"github.com/egorgasay/gRPCis-client/api/balancer"
 	gcredentials "google.golang.org/grpc/credentials"
-	"grpcis-client/api/balancer"
 	"sync"
 
 	"google.golang.org/grpc"

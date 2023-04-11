@@ -3,7 +3,7 @@ package grpcisclient
 import (
 	"context"
 	"fmt"
-	"grpcis-client/api/balancer"
+	"github.com/egorgasay/gRPCis-client/api/balancer"
 )
 
 const (

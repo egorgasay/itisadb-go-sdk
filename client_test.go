@@ -2,7 +2,7 @@ package grpcisclient_test
 
 import (
 	"context"
-	grpcisclient "grpcis-client"
+	grpcisclient "github.com/egorgasay/gRPCis-client"
 	"log"
 	"reflect"
 	"testing"
