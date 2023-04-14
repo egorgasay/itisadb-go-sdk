@@ -1,4 +1,4 @@
-# `grpcis-go-sdk` - gRPCis Driver and Toolkit [![PkgGoDev](https://pkg.go.dev/badge/github.com/egorgasay/grpcis-go-sdk](https://pkg.go.dev/github.com/redis/egorgasay/grpcis-go-sdk)
+# `grpcis-go-sdk` - gRPCis Driver and Toolkit [![PkgGoDev](https://pkg.go.dev/badge/golang.org/x/mod)](https://pkg.go.dev/golang.org/x/mod)
 
 ### [gRPCis](https://github.com/egorgasay/gRPCis) is a system consisting of several microservices (Memory Balancer, Storage, WebApplication), which is a distributed key-value database.
 
