@@ -1,13 +1,13 @@
-# `db-go-sdk` - gRPCis Driver and Toolkit [![PkgGoDev](https://pkg.go.dev/badge/github.com/redis/go-redis/v9)](https://pkg.go.dev/github.com/redis/go-redis/v9?tab=doc)
+# `grpcis-go-sdk` - gRPCis Driver and Toolkit [![PkgGoDev](https://pkg.go.dev/badge/github.com/egorgasay/grpcis-go-sdk](https://pkg.go.dev/github.com/redis/egorgasay/grpcis-go-sdk)
 
-### [gRPCis](https://github.com/egorgasay/grpc-storage) is a system consisting of several microservices (Memory Balancer, Storage, WebApplication), which is a distributed key-value database.
+### [gRPCis](https://github.com/egorgasay/gRPCis) is a system consisting of several microservices (Memory Balancer, Storage, WebApplication), which is a distributed key-value database.
 
-# [Documentation](https://pkg.go.dev/github.com/egorgasay/gRPCis-client)
+# [Documentation](https://pkg.go.dev/github.com/egorgasay/grpcis-go-sdk)
 
 
 # Installation  
 ```bash
-go get https://github.com/egorgasay/gRPCis-client
+go get https://github.com/egorgasay/grpcis-go-sdk
 ```
 
 # Quick start  
