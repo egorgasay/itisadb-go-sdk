@@ -1,4 +1,4 @@
-module github.com/egorgasay/gRPCis-client
+module github.com/egorgasay/grpcis-go-sdk
 
 go 1.19
 

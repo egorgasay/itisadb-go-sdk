@@ -1,8 +1,8 @@
-package grpcisclient_test
+package grpcis_test
 
 import (
 	"context"
-	grpcisclient "github.com/egorgasay/gRPCis-client"
+	"github.com/egorgasay/grpcis-go-sdk"
 	"log"
 	"reflect"
 	"testing"
@@ -10,18 +10,18 @@ import (
 
 // TestSetGetOne to run this test, grpcis must be run on :800.
 func TestSetGetOne(t *testing.T) {
-	grpcis, err := grpcisclient.New(":800")
+	db, err := grpcis.New(":800")
 	if err != nil {
 		return
 	}
 
 	ctx := context.TODO()
-	err = grpcis.SetOne(ctx, "qwe", "111")
+	err = db.SetOne(ctx, "qwe", "111")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	get, err := grpcis.GetOne(ctx, "qwe")
+	get, err := db.GetOne(ctx, "qwe")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -33,18 +33,18 @@ func TestSetGetOne(t *testing.T) {
 
 // TestSetToGetFrom to run this test, grpcis must be run on :800.
 func TestSetToGetFrom(t *testing.T) {
-	grpcis, err := grpcisclient.New(":800")
+	db, err := grpcis.New(":800")
 	if err != nil {
 		return
 	}
 
 	ctx := context.TODO()
-	err = grpcis.SetTo(ctx, "fff", "qqq", 1)
+	err = db.SetTo(ctx, "fff", "qqq", 1)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	get, err := grpcis.GetFrom(ctx, "fff", 1)
+	get, err := db.GetFrom(ctx, "fff", 1)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -57,18 +57,18 @@ func TestSetToGetFrom(t *testing.T) {
 // TestSetToDBGetFromDB to run this test, grpcis must be run on :800.
 // TODO: Add edge cases.
 func TestSetToDBGetFromDB(t *testing.T) {
-	grpcis, err := grpcisclient.New(":800")
+	db, err := grpcis.New(":800")
 	if err != nil {
 		return
 	}
 
 	ctx := context.TODO()
-	err = grpcis.SetToDB(ctx, "db_key", "qqq")
+	err = db.SetToDB(ctx, "db_key", "qqq")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	get, err := grpcis.GetFromDB(ctx, "db_key")
+	get, err := db.GetFromDB(ctx, "db_key")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -81,18 +81,18 @@ func TestSetToDBGetFromDB(t *testing.T) {
 // TestSetToAllGet to run this test, grpcis must be run on :800.
 // TODO: Add edge cases.
 func TestSetToAllGet(t *testing.T) {
-	grpcis, err := grpcisclient.New(":800")
+	db, err := grpcis.New(":800")
 	if err != nil {
 		return
 	}
 
 	ctx := context.TODO()
-	err = grpcis.SetToAll(ctx, "all_key", "qqq")
+	err = db.SetToAll(ctx, "all_key", "qqq")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	get, err := grpcis.GetOne(ctx, "all_key")
+	get, err := db.GetOne(ctx, "all_key")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -105,7 +105,7 @@ func TestSetToAllGet(t *testing.T) {
 // TestSetManyGetMany to run this test, grpcis must be run on :800.
 // TODO: Add edge cases.
 func TestSetManyGetMany(t *testing.T) {
-	grpcis, err := grpcisclient.New(":800")
+	db, err := grpcis.New(":800")
 	if err != nil {
 		return
 	}
@@ -119,12 +119,12 @@ func TestSetManyGetMany(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	err = grpcis.SetMany(ctx, m)
+	err = db.SetMany(ctx, m)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	get, err := grpcis.GetOne(ctx, "m2")
+	get, err := db.GetOne(ctx, "m2")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -134,7 +134,7 @@ func TestSetManyGetMany(t *testing.T) {
 	}
 
 	k := []string{"m1", "m2", "m3", "m4", "m5"}
-	res, err := grpcis.GetMany(ctx, k)
+	res, err := db.GetMany(ctx, k)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -147,7 +147,7 @@ func TestSetManyGetMany(t *testing.T) {
 // TestSetManyOptsGetManyOpts to run this test, grpcis must be run on :800.
 // TODO: Add edge cases.
 func TestSetManyOptsGetManyOpts(t *testing.T) {
-	grpcis, err := grpcisclient.New(":800")
+	db, err := grpcis.New(":800")
 	if err != nil {
 		return
 	}
@@ -160,21 +160,21 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 		"mo5": "k5",
 	}
 
-	m := map[string]grpcisclient.Value{
-		"mo1": {Value: "k1", Opts: grpcisclient.Opts{Server: 1}},
-		"mo2": {Value: "k2", Opts: grpcisclient.Opts{Server: 1}},
-		"mo3": {Value: "k3", Opts: grpcisclient.Opts{Server: -1}},
-		"mo4": {Value: "k4", Opts: grpcisclient.Opts{Server: -2}},
-		"mo5": {Value: "k5", Opts: grpcisclient.Opts{Server: -3}},
+	m := map[string]grpcis.Value{
+		"mo1": {Value: "k1", Opts: grpcis.Opts{Server: 1}},
+		"mo2": {Value: "k2", Opts: grpcis.Opts{Server: 1}},
+		"mo3": {Value: "k3", Opts: grpcis.Opts{Server: -1}},
+		"mo4": {Value: "k4", Opts: grpcis.Opts{Server: -2}},
+		"mo5": {Value: "k5", Opts: grpcis.Opts{Server: -3}},
 	}
 
 	ctx := context.TODO()
-	err = grpcis.SetManyOpts(ctx, m)
+	err = db.SetManyOpts(ctx, m)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	get, err := grpcis.GetOne(ctx, "mo2")
+	get, err := db.GetOne(ctx, "mo2")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -183,15 +183,15 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 		t.Fatal("Wrong value")
 	}
 
-	k := []grpcisclient.Key{
-		{Key: "mo1", Opts: grpcisclient.Opts{Server: 1}},
-		{Key: "mo2", Opts: grpcisclient.Opts{Server: 1}},
-		{Key: "mo3", Opts: grpcisclient.Opts{Server: -1}},
-		{Key: "mo4", Opts: grpcisclient.Opts{Server: 0}},
-		{Key: "mo5", Opts: grpcisclient.Opts{Server: 0}},
+	k := []grpcis.Key{
+		{Key: "mo1", Opts: grpcis.Opts{Server: 1}},
+		{Key: "mo2", Opts: grpcis.Opts{Server: 1}},
+		{Key: "mo3", Opts: grpcis.Opts{Server: -1}},
+		{Key: "mo4", Opts: grpcis.Opts{Server: 0}},
+		{Key: "mo5", Opts: grpcis.Opts{Server: 0}},
 	}
 
-	res, err := grpcis.GetManyOpts(ctx, k)
+	res, err := db.GetManyOpts(ctx, k)
 	if err != nil {
 		log.Fatalln(err)
 	}

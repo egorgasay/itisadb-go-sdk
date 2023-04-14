@@ -1,9 +1,9 @@
-package grpcisclient
+package grpcis
 
 import (
 	"context"
 	"fmt"
-	"github.com/egorgasay/gRPCis-client/api/balancer"
+	"github.com/egorgasay/grpcis-go-sdk/api/balancer"
 )
 
 const (

@@ -1,4 +1,4 @@
-# `grpcis-go-sdk` - gRPCis Driver and Toolkit [![PkgGoDev](https://pkg.go.dev/badge/github.com/redis/go-redis/v9)](https://pkg.go.dev/github.com/redis/go-redis/v9?tab=doc)
+# `db-go-sdk` - gRPCis Driver and Toolkit [![PkgGoDev](https://pkg.go.dev/badge/github.com/redis/go-redis/v9)](https://pkg.go.dev/github.com/redis/go-redis/v9?tab=doc)
 
 ### [gRPCis](https://github.com/egorgasay/grpc-storage) is a system consisting of several microservices (Memory Balancer, Storage, WebApplication), which is a distributed key-value database.
 

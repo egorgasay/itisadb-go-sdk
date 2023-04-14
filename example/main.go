@@ -2,24 +2,24 @@ package main
 
 import (
 	"context"
-	grpcisclient "github.com/egorgasay/gRPCis-client"
+	"github.com/egorgasay/grpcis-go-sdk"
 	"log"
 )
 
 // main to run this test, gRPCis must be run on :800.
 func main() {
-	grpcis, err := grpcisclient.New(":800")
+	db, err := grpcis.New(":800")
 	if err != nil {
 		return
 	}
 
 	ctx := context.TODO()
-	err = grpcis.SetOne(ctx, "qwe", "111")
+	err = db.SetOne(ctx, "qwe", "111")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	get, err := grpcis.GetOne(ctx, "qwe")
+	get, err := db.GetOne(ctx, "qwe")
 	if err != nil {
 		log.Fatalln(err)
 	}
