@@ -12,7 +12,7 @@ const (
 )
 
 func (c *Client) get(ctx context.Context, key string, server int32) (string, error) {
-	res, err := c.client.Get(ctx, &balancer.BalancerGetRequest{
+	res, err := c.cl.Get(ctx, &balancer.BalancerGetRequest{
 		Key:    key,
 		Server: server,
 	})
