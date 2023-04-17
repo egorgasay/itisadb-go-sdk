@@ -236,8 +236,8 @@ func TestSetOneRPS(t *testing.T) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	const gnum = 10000
-	const maxRPS = 100
+	const gnum = 1500000
+	const maxRPS = 30000
 
 	log.Println("Total actions:", gnum)
 	log.Println("RPS:", maxRPS)
