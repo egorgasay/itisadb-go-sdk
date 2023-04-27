@@ -14,7 +14,7 @@ const (
 )
 
 func (c *Client) set(ctx context.Context, key, value string, server int32) (int32, error) {
-	res, err := c.client.Set(ctx, &balancer.BalancerSetRequest{
+	res, err := c.cl.Set(ctx, &balancer.BalancerSetRequest{
 		Key:    key,
 		Value:  value,
 		Server: server,

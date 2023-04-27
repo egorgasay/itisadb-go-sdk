@@ -10,9 +10,10 @@ import (
 )
 
 type Client struct {
-	client         balancer.BalancerClient
 	keysAndServers map[string]int32
 	mu             sync.RWMutex
+
+	cl balancer.BalancerClient
 }
 
 type Opts struct {
@@ -43,8 +44,10 @@ func New(balancerIP string, credentials ...gcredentials.TransportCredentials) (*
 		return nil, err
 	}
 
+	client := balancer.NewBalancerClient(conn)
+
 	return &Client{
-		client:         balancer.NewBalancerClient(conn),
 		keysAndServers: make(map[string]int32, 100),
+		cl:             client,
 	}, nil
 }

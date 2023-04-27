@@ -1,11 +1,19 @@
 package grpcis_test
 
 import (
+	"bufio"
 	"context"
+	"fmt"
 	"github.com/egorgasay/grpcis-go-sdk"
 	"log"
+	"os"
 	"reflect"
+	"strings"
+	"sync"
 	"testing"
+	"time"
+
+	"modernc.org/strutil"
 )
 
 // TestSetGetOne to run this test, grpcis must be run on :800.
@@ -199,4 +207,91 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 	if !reflect.DeepEqual(res, me) {
 		t.Fatal("Wrong value")
 	}
+}
+
+// Benchmark test for SetOne.
+func BenchmarkSetOne(b *testing.B) {
+	db, err := grpcis.New(":800")
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	ctx := context.TODO()
+	j := 1000
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		k := fmt.Sprint(j)
+		j++
+		b.StartTimer()
+		err = db.SetOne(ctx, k, "value")
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// Test to define rps for SetOne.
+func TestSetOneRPS(t *testing.T) {
+	db, err := grpcis.New(":800")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	const gnum = 1500000
+	const maxRPS = 30000
+
+	log.Println("Total actions:", gnum)
+	log.Println("RPS:", maxRPS)
+
+	var ints = make([]string, maxRPS)
+	for i := 0; i < maxRPS; i++ {
+		ints[i] = fmt.Sprint(i)
+	}
+
+	log.Println("Hops:", gnum/maxRPS)
+
+	for tt := gnum / maxRPS; tt > 0; tt-- {
+		var wg sync.WaitGroup
+		wg.Add(maxRPS)
+
+		var wgSent sync.WaitGroup
+		wgSent.Add(maxRPS)
+		ctx := context.TODO()
+		for i := 0; i < maxRPS; i++ {
+			wg.Done()
+			go func(i int) {
+				wg.Wait()
+				db.SetOne(ctx, ints[i], "value")
+				wgSent.Done()
+			}(i)
+
+		}
+		wg.Wait()
+		start := time.Now()
+		wgSent.Wait()
+		t.Log(time.Since(start))
+	}
+}
+
+func TestDistinct(t *testing.T) {
+	f, err := os.Open("/tmp/log14/transactionLogger")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var keys = make(map[string]struct{}, 16000)
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		action := scanner.Text()
+		decode, err := strutil.Base64Decode([]byte(action))
+		if err != nil {
+			return
+		}
+
+		split := strings.Split(string(decode), " ")
+		key := split[1]
+		keys[key] = struct{}{}
+	}
+
+	t.Log(len(keys))
 }

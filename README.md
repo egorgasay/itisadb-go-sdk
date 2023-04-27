@@ -7,7 +7,7 @@
 
 # Installation  
 ```bash
-go get https://github.com/egorgasay/grpcis-go-sdk
+go get github.com/egorgasay/grpcis-go-sdk
 ```
 
 # Quick start  
