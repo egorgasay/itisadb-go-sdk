@@ -13,11 +13,12 @@ const (
 	setToAllAndToDB
 )
 
-func (c *Client) set(ctx context.Context, key, value string, server int32) (int32, error) {
+func (c *Client) set(ctx context.Context, key, value string, server int32, uniques bool) (int32, error) {
 	res, err := c.cl.Set(ctx, &balancer.BalancerSetRequest{
-		Key:    key,
-		Value:  value,
-		Server: server,
+		Key:     key,
+		Value:   value,
+		Server:  server,
+		Uniques: uniques,
 	})
 
 	if err != nil {
@@ -28,8 +29,8 @@ func (c *Client) set(ctx context.Context, key, value string, server int32) (int3
 }
 
 // SetOne sets the value for the key to gRPCis.
-func (c *Client) SetOne(ctx context.Context, key, value string) error {
-	server, err := c.set(ctx, key, value, setDefault)
+func (c *Client) SetOne(ctx context.Context, key, value string, uniques bool) error {
+	server, err := c.set(ctx, key, value, setDefault, uniques)
 	if err != nil {
 		return err
 	}
@@ -42,33 +43,33 @@ func (c *Client) SetOne(ctx context.Context, key, value string) error {
 }
 
 // SetTo sets the value for the key on the specified server.
-func (c *Client) SetTo(ctx context.Context, key, value string, server int32) error {
-	_, err := c.set(ctx, key, value, server)
+func (c *Client) SetTo(ctx context.Context, key, value string, server int32, uniques bool) error {
+	_, err := c.set(ctx, key, value, server, uniques)
 	return err
 }
 
 // SetToDB sets the value for the key in the physical database.
-func (c *Client) SetToDB(ctx context.Context, key, value string) error {
-	_, err := c.set(ctx, key, value, setToDB)
+func (c *Client) SetToDB(ctx context.Context, key, value string, uniques bool) error {
+	_, err := c.set(ctx, key, value, setToDB, uniques)
 	return err
 }
 
 // SetToAll sets the value for the key on all servers.
-func (c *Client) SetToAll(ctx context.Context, key, value string) error {
-	_, err := c.set(ctx, key, value, setToAll)
+func (c *Client) SetToAll(ctx context.Context, key, value string, uniques bool) error {
+	_, err := c.set(ctx, key, value, setToAll, uniques)
 	return err
 }
 
 // SetToAllAndToDB sets the value for the key on all servers and in th physical database.
-func (c *Client) SetToAllAndToDB(ctx context.Context, key, value string) error {
-	_, err := c.set(ctx, key, value, setToAllAndToDB)
+func (c *Client) SetToAllAndToDB(ctx context.Context, key, value string, uniques bool) error {
+	_, err := c.set(ctx, key, value, setToAllAndToDB, uniques)
 	return err
 }
 
 // SetMany sets a set of values for gRPCis.
-func (c *Client) SetMany(ctx context.Context, keyValue map[string]string) error {
+func (c *Client) SetMany(ctx context.Context, keyValue map[string]string, uniques bool) error {
 	for key, value := range keyValue {
-		_, err := c.set(ctx, key, value, setDefault)
+		_, err := c.set(ctx, key, value, setDefault, uniques)
 		if err != nil {
 			return err
 		}
@@ -77,9 +78,9 @@ func (c *Client) SetMany(ctx context.Context, keyValue map[string]string) error 
 }
 
 // SetManyOpts gets a lot of values from gRPCis with opts.
-func (c *Client) SetManyOpts(ctx context.Context, keyValue map[string]Value) error {
+func (c *Client) SetManyOpts(ctx context.Context, keyValue map[string]Value, uniques bool) error {
 	for key, value := range keyValue {
-		_, err := c.set(ctx, key, value.Value, value.Opts.Server)
+		_, err := c.set(ctx, key, value.Value, value.Opts.Server, uniques)
 		if err != nil {
 			return err
 		}
