@@ -2,8 +2,11 @@ package grpcis
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/egorgasay/grpcis-go-sdk/api/balancer"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -12,6 +15,8 @@ const (
 	setToAll
 	setToAllAndToDB
 )
+
+var ErrUniqueConstraint = errors.New("unique constraint failed")
 
 func (c *Client) set(ctx context.Context, key, value string, server int32, uniques bool) (int32, error) {
 	res, err := c.cl.Set(ctx, &balancer.BalancerSetRequest{
@@ -22,7 +27,11 @@ func (c *Client) set(ctx context.Context, key, value string, server int32, uniqu
 	})
 
 	if err != nil {
-		return 0, fmt.Errorf("an error occurred while setting the value in the storage: %w", err)
+		st, ok := status.FromError(err)
+		if ok && st.Code() == codes.AlreadyExists {
+			return 0, ErrUniqueConstraint
+		}
+		return 0, fmt.Errorf("an unknown error occurred while setting the value in the storage: %w", err)
 	}
 
 	return res.SavedTo, nil

@@ -24,7 +24,7 @@ func TestSetGetOne(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	err = db.SetOne(ctx, "qwe", "111")
+	err = db.SetOne(ctx, "qwe", "111", false)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -47,7 +47,7 @@ func TestSetToGetFrom(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	err = db.SetTo(ctx, "fff", "qqq", 1)
+	err = db.SetTo(ctx, "fff", "qqq", 1, false)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -71,7 +71,7 @@ func TestSetToDBGetFromDB(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	err = db.SetToDB(ctx, "db_key", "qqq")
+	err = db.SetToDB(ctx, "db_key", "qqq", false)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -95,7 +95,7 @@ func TestSetToAllGet(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	err = db.SetToAll(ctx, "all_key", "qqq")
+	err = db.SetToAll(ctx, "all_key", "qqq", false)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -127,7 +127,7 @@ func TestSetManyGetMany(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	err = db.SetMany(ctx, m)
+	err = db.SetMany(ctx, m, false)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -177,7 +177,7 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	err = db.SetManyOpts(ctx, m)
+	err = db.SetManyOpts(ctx, m, false)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -223,7 +223,7 @@ func BenchmarkSetOne(b *testing.B) {
 		k := fmt.Sprint(j)
 		j++
 		b.StartTimer()
-		err = db.SetOne(ctx, k, "value")
+		err = db.SetOne(ctx, k, "value", false)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -260,7 +260,7 @@ func TestSetOneRPS(t *testing.T) {
 			wg.Done()
 			go func(i int) {
 				wg.Wait()
-				db.SetOne(ctx, ints[i], "value")
+				db.SetOne(ctx, ints[i], "value", false)
 				wgSent.Done()
 			}(i)
 
