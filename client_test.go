@@ -16,7 +16,7 @@ import (
 	"modernc.org/strutil"
 )
 
-// TestSetGetOne to run this test, grpcis must be run on :800.
+// TestSetGetOne to run this test, itisadb must be run on :800.
 func TestSetGetOne(t *testing.T) {
 	db, err := itisadb.New(":800")
 	if err != nil {
@@ -39,7 +39,7 @@ func TestSetGetOne(t *testing.T) {
 	}
 }
 
-// TestSetToGetFrom to run this test, grpcis must be run on :800.
+// TestSetToGetFrom to run this test, itisadb must be run on :800.
 func TestSetToGetFrom(t *testing.T) {
 	db, err := itisadb.New(":800")
 	if err != nil {
@@ -62,7 +62,7 @@ func TestSetToGetFrom(t *testing.T) {
 	}
 }
 
-// TestSetToDBGetFromDB to run this test, grpcis must be run on :800.
+// TestSetToDBGetFromDB to run this test, itisadb must be run on :800.
 // TODO: Add edge cases.
 func TestSetToDBGetFromDB(t *testing.T) {
 	db, err := itisadb.New(":800")
@@ -86,7 +86,7 @@ func TestSetToDBGetFromDB(t *testing.T) {
 	}
 }
 
-// TestSetToAllGet to run this test, grpcis must be run on :800.
+// TestSetToAllGet to run this test, itisadb must be run on :800.
 // TODO: Add edge cases.
 func TestSetToAllGet(t *testing.T) {
 	db, err := itisadb.New(":800")
@@ -110,7 +110,7 @@ func TestSetToAllGet(t *testing.T) {
 	}
 }
 
-// TestSetManyGetMany to run this test, grpcis must be run on :800.
+// TestSetManyGetMany to run this test, itisadb must be run on :800.
 // TODO: Add edge cases.
 func TestSetManyGetMany(t *testing.T) {
 	db, err := itisadb.New(":800")
@@ -152,7 +152,7 @@ func TestSetManyGetMany(t *testing.T) {
 	}
 }
 
-// TestSetManyOptsGetManyOpts to run this test, grpcis must be run on :800.
+// TestSetManyOptsGetManyOpts to run this test, itisadb must be run on :800.
 // TODO: Add edge cases.
 func TestSetManyOptsGetManyOpts(t *testing.T) {
 	db, err := itisadb.New(":800")
