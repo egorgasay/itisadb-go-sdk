@@ -1,10 +1,10 @@
-package grpcis
+package itisadb
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/egorgasay/grpcis-go-sdk/api/balancer"
+	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

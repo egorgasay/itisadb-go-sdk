@@ -1,4 +1,4 @@
-module github.com/egorgasay/grpcis-go-sdk
+module github.com/egorgasay/itisadb-go-sdk
 
 go 1.19
 

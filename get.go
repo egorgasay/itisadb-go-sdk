@@ -1,9 +1,9 @@
-package grpcis
+package itisadb
 
 import (
 	"context"
 	"fmt"
-	"github.com/egorgasay/grpcis-go-sdk/api/balancer"
+	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
 )
 
 const (

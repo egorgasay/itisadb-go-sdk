@@ -1,10 +1,10 @@
-package grpcis_test
+package itisadb_test
 
 import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/egorgasay/grpcis-go-sdk"
+	"github.com/egorgasay/itisadb-go-sdk"
 	"log"
 	"os"
 	"reflect"
@@ -18,7 +18,7 @@ import (
 
 // TestSetGetOne to run this test, grpcis must be run on :800.
 func TestSetGetOne(t *testing.T) {
-	db, err := grpcis.New(":800")
+	db, err := itisadb.New(":800")
 	if err != nil {
 		return
 	}
@@ -41,7 +41,7 @@ func TestSetGetOne(t *testing.T) {
 
 // TestSetToGetFrom to run this test, grpcis must be run on :800.
 func TestSetToGetFrom(t *testing.T) {
-	db, err := grpcis.New(":800")
+	db, err := itisadb.New(":800")
 	if err != nil {
 		return
 	}
@@ -65,7 +65,7 @@ func TestSetToGetFrom(t *testing.T) {
 // TestSetToDBGetFromDB to run this test, grpcis must be run on :800.
 // TODO: Add edge cases.
 func TestSetToDBGetFromDB(t *testing.T) {
-	db, err := grpcis.New(":800")
+	db, err := itisadb.New(":800")
 	if err != nil {
 		return
 	}
@@ -89,7 +89,7 @@ func TestSetToDBGetFromDB(t *testing.T) {
 // TestSetToAllGet to run this test, grpcis must be run on :800.
 // TODO: Add edge cases.
 func TestSetToAllGet(t *testing.T) {
-	db, err := grpcis.New(":800")
+	db, err := itisadb.New(":800")
 	if err != nil {
 		return
 	}
@@ -113,7 +113,7 @@ func TestSetToAllGet(t *testing.T) {
 // TestSetManyGetMany to run this test, grpcis must be run on :800.
 // TODO: Add edge cases.
 func TestSetManyGetMany(t *testing.T) {
-	db, err := grpcis.New(":800")
+	db, err := itisadb.New(":800")
 	if err != nil {
 		return
 	}
@@ -155,7 +155,7 @@ func TestSetManyGetMany(t *testing.T) {
 // TestSetManyOptsGetManyOpts to run this test, grpcis must be run on :800.
 // TODO: Add edge cases.
 func TestSetManyOptsGetManyOpts(t *testing.T) {
-	db, err := grpcis.New(":800")
+	db, err := itisadb.New(":800")
 	if err != nil {
 		return
 	}
@@ -168,12 +168,12 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 		"mo5": "k5",
 	}
 
-	m := map[string]grpcis.Value{
-		"mo1": {Value: "k1", Opts: grpcis.Opts{Server: 1}},
-		"mo2": {Value: "k2", Opts: grpcis.Opts{Server: 1}},
-		"mo3": {Value: "k3", Opts: grpcis.Opts{Server: -1}},
-		"mo4": {Value: "k4", Opts: grpcis.Opts{Server: -2}},
-		"mo5": {Value: "k5", Opts: grpcis.Opts{Server: -3}},
+	m := map[string]itisadb.Value{
+		"mo1": {Value: "k1", Opts: itisadb.Opts{Server: 1}},
+		"mo2": {Value: "k2", Opts: itisadb.Opts{Server: 1}},
+		"mo3": {Value: "k3", Opts: itisadb.Opts{Server: -1}},
+		"mo4": {Value: "k4", Opts: itisadb.Opts{Server: -2}},
+		"mo5": {Value: "k5", Opts: itisadb.Opts{Server: -3}},
 	}
 
 	ctx := context.TODO()
@@ -191,12 +191,12 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 		t.Fatal("Wrong value")
 	}
 
-	k := []grpcis.Key{
-		{Key: "mo1", Opts: grpcis.Opts{Server: 1}},
-		{Key: "mo2", Opts: grpcis.Opts{Server: 1}},
-		{Key: "mo3", Opts: grpcis.Opts{Server: -1}},
-		{Key: "mo4", Opts: grpcis.Opts{Server: 0}},
-		{Key: "mo5", Opts: grpcis.Opts{Server: 0}},
+	k := []itisadb.Key{
+		{Key: "mo1", Opts: itisadb.Opts{Server: 1}},
+		{Key: "mo2", Opts: itisadb.Opts{Server: 1}},
+		{Key: "mo3", Opts: itisadb.Opts{Server: -1}},
+		{Key: "mo4", Opts: itisadb.Opts{Server: 0}},
+		{Key: "mo5", Opts: itisadb.Opts{Server: 0}},
 	}
 
 	res, err := db.GetManyOpts(ctx, k)
@@ -211,7 +211,7 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 
 // Benchmark test for SetOne.
 func BenchmarkSetOne(b *testing.B) {
-	db, err := grpcis.New(":800")
+	db, err := itisadb.New(":800")
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -232,7 +232,7 @@ func BenchmarkSetOne(b *testing.B) {
 
 // Test to define rps for SetOne.
 func TestSetOneRPS(t *testing.T) {
-	db, err := grpcis.New(":800")
+	db, err := itisadb.New(":800")
 	if err != nil {
 		log.Fatalln(err)
 	}

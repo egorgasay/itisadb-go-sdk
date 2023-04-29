@@ -1,7 +1,7 @@
-package grpcis
+package itisadb
 
 import (
-	"github.com/egorgasay/grpcis-go-sdk/api/balancer"
+	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
 	gcredentials "google.golang.org/grpc/credentials"
 	"sync"
 
