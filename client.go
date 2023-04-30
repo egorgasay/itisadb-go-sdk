@@ -1,6 +1,7 @@
 package itisadb
 
 import (
+	"context"
 	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
 	gcredentials "google.golang.org/grpc/credentials"
 	"sync"
@@ -49,5 +50,21 @@ func New(balancerIP string, credentials ...gcredentials.TransportCredentials) (*
 	return &Client{
 		keysAndServers: make(map[string]int32, 100),
 		cl:             client,
+	}, nil
+}
+
+// Index creates a new area.
+func (c *Client) Index(ctx context.Context, name string) (*Index, error) {
+	_, err := c.cl.Index(ctx, &balancer.IndexRequest{
+		Name: name,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &Index{
+		name: name,
+		cl:   c.cl,
 	}, nil
 }
