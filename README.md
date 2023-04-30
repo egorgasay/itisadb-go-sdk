@@ -2,7 +2,7 @@
 
 ### [itisadb](https://github.com/egorgasay/itisadb) is a system consisting of several microservices (Memory Balancer, Storage, WebApplication), which is a distributed key-value database.
 
-# [Documentation](https://pkg.go.dev/github.com/egorgasay/grpcis-go-sdk)
+# [Documentation](https://pkg.go.dev/github.com/egorgasay/itisadb-go-sdk)
 
 
 # Installation
@@ -20,7 +20,7 @@ import (
 	"log"
 )
 
-// main to run this test, gRPCis must be run on :800.
+// main to run this test, itisadb must be run on :800.
 func main() {
 	db, err := itisadb.New(":800")
 	if err != nil {
@@ -28,7 +28,7 @@ func main() {
 	}
 
 	ctx := context.TODO()
-	err = db.SetOne(ctx, "qwe", "111")
+	err = db.SetOne(ctx, "qwe", "111", false)
 	if err != nil {
 		log.Fatalln(err)
 	}

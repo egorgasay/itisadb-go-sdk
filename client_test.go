@@ -230,6 +230,106 @@ func BenchmarkSetOne(b *testing.B) {
 	}
 }
 
+func TestSetGetOneToIndex(t *testing.T) {
+	db, err := itisadb.New(":800")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	area, err := db.Index(context.TODO(), "User")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	_, err = area.Set(context.TODO(), "Name", "Max", false)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	value, err := area.Get(context.TODO(), "Name")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if value != "Max" {
+		t.Fatalf("Wrong value [%s] wanted [%s]\n", value, "Max")
+	}
+
+	/// CAR
+
+	car, err := db.Index(context.TODO(), "Car")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	_, err = car.Set(context.TODO(), "Name", "MyCar", false)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	value, err = car.Get(context.TODO(), "Name")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if value != "MyCar" {
+		t.Fatal("Wrong value")
+	}
+
+	/// WHEEL
+
+	wheel, err := car.Index(context.TODO(), "Wheel")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	_, err = wheel.Set(context.TODO(), "Color", "Black", false)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	value, err = wheel.Get(context.TODO(), "Color")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if value != "Black" {
+		t.Fatal("Wrong value")
+	}
+
+	/// TRAILER
+
+	trailer, err := car.Index(context.TODO(), "Trailer")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	_, err = trailer.Set(context.TODO(), "Color", "Red", false)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	/// TEST WHEEL & TRAILER AREAS ARE STILL WORKING
+
+	value, err = wheel.Get(context.TODO(), "Color")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if value != "Black" {
+		t.Fatal("Wrong value")
+	}
+
+	value, err = trailer.Get(context.TODO(), "Color")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if value != "Red" {
+		t.Fatal("Wrong value")
+	}
+}
+
 // Test to define rps for SetOne.
 func TestSetOneRPS(t *testing.T) {
 	db, err := itisadb.New(":800")
@@ -237,7 +337,7 @@ func TestSetOneRPS(t *testing.T) {
 		log.Fatalln(err)
 	}
 	const gnum = 1500000
-	const maxRPS = 30000
+	const maxRPS = 25000
 
 	log.Println("Total actions:", gnum)
 	log.Println("RPS:", maxRPS)
@@ -249,6 +349,7 @@ func TestSetOneRPS(t *testing.T) {
 
 	log.Println("Hops:", gnum/maxRPS)
 
+	var total time.Duration
 	for tt := gnum / maxRPS; tt > 0; tt-- {
 		var wg sync.WaitGroup
 		wg.Add(maxRPS)
@@ -268,8 +369,10 @@ func TestSetOneRPS(t *testing.T) {
 		wg.Wait()
 		start := time.Now()
 		wgSent.Wait()
+		total += time.Since(start)
 		t.Log(time.Since(start))
 	}
+	t.Log(total)
 }
 
 func TestDistinct(t *testing.T) {
