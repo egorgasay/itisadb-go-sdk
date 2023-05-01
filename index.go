@@ -15,8 +15,8 @@ type Index struct {
 }
 
 // Set sets the value for the key in the specified index.
-func (i *Index) Set(ctx context.Context, key, value string, uniques bool) (int32, error) {
-	res, err := i.cl.SetToIndex(ctx, &balancer.BalancerSetToIndexRequest{
+func (i *Index) Set(ctx context.Context, key, value string, uniques bool) error {
+	_, err := i.cl.SetToIndex(ctx, &balancer.BalancerSetToIndexRequest{
 		Key:     key,
 		Value:   value,
 		Index:   i.name,
@@ -26,12 +26,12 @@ func (i *Index) Set(ctx context.Context, key, value string, uniques bool) (int32
 	if err != nil {
 		st, ok := status.FromError(err)
 		if ok && st.Code() == codes.AlreadyExists {
-			return 0, ErrUniqueConstraint
+			return ErrUniqueConstraint
 		}
-		return 0, fmt.Errorf("an unknown error occurred while setting the value in the storage: %w", err)
+		return fmt.Errorf("an unknown error occurred while setting the value in the storage: %w", err)
 	}
 
-	return res.SavedTo, nil
+	return nil
 }
 
 // Get gets the value for the key from the specified index.
@@ -79,4 +79,17 @@ func (i *Index) GetIndex(ctx context.Context) (map[string]string, error) {
 	}
 
 	return r.GetIndex(), nil
+}
+
+// Size returns  the size of the index.
+func (i *Index) Size(ctx context.Context) (uint64, error) {
+	r, err := i.cl.Size(ctx, &balancer.BalancerIndexSizeRequest{
+		Name: i.name,
+	})
+
+	if err != nil {
+		return 0, err
+	}
+
+	return r.GetSize(), nil
 }
