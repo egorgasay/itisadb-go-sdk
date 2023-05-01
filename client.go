@@ -55,7 +55,7 @@ func New(balancerIP string, credentials ...gcredentials.TransportCredentials) (*
 
 // Index creates a new area.
 func (c *Client) Index(ctx context.Context, name string) (*Index, error) {
-	_, err := c.cl.Index(ctx, &balancer.IndexRequest{
+	_, err := c.cl.Index(ctx, &balancer.BalancerIndexRequest{
 		Name: name,
 	})
 
@@ -67,4 +67,17 @@ func (c *Client) Index(ctx context.Context, name string) (*Index, error) {
 		name: name,
 		cl:   c.cl,
 	}, nil
+}
+
+// IsIndex checks if it is an index or not.
+func (c *Client) IsIndex(ctx context.Context, name string) (bool, error) {
+	r, err := c.cl.IsIndex(ctx, &balancer.BalancerIsIndexRequest{
+		Name: name,
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	return r.Ok, nil
 }

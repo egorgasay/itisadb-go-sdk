@@ -49,7 +49,7 @@ func (i *Index) Get(ctx context.Context, key string) (string, error) {
 // Index returns a new or an existing index.
 func (i *Index) Index(ctx context.Context, name string) (*Index, error) {
 	name = i.name + "/" + name
-	_, err := i.cl.Index(ctx, &balancer.IndexRequest{
+	_, err := i.cl.Index(ctx, &balancer.BalancerIndexRequest{
 		Name: name,
 	})
 
@@ -61,4 +61,22 @@ func (i *Index) Index(ctx context.Context, name string) (*Index, error) {
 		name: name,
 		cl:   i.cl,
 	}, nil
+}
+
+// GetName returns the name of the index.
+func (i *Index) GetName() string {
+	return i.name
+}
+
+// GetIndex returns the index.
+func (i *Index) GetIndex(ctx context.Context) (map[string]string, error) {
+	r, err := i.cl.GetIndex(ctx, &balancer.BalancerGetIndexRequest{
+		Name: i.name,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return r.GetIndex(), nil
 }
