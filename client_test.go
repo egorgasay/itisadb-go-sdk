@@ -236,17 +236,17 @@ func TestSetGetOneToIndex(t *testing.T) {
 		log.Fatalln(err)
 	}
 
-	area, err := db.Index(context.TODO(), "User")
+	index, err := db.Index(context.TODO(), "User")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	_, err = area.Set(context.TODO(), "Name", "Max", false)
+	_, err = index.Set(context.TODO(), "Name", "Max", false)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	value, err := area.Get(context.TODO(), "Name")
+	value, err := index.Get(context.TODO(), "Name")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -330,6 +330,80 @@ func TestSetGetOneToIndex(t *testing.T) {
 	}
 }
 
+// TestIsIndex
+func TestIsIndex(t *testing.T) {
+	db, err := itisadb.New(":800")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	name := fmt.Sprintf("%d", time.Now().Unix())
+	index, err := db.Index(context.TODO(), name)
+	if err != nil {
+		log.Fatalf("Index error: %s\n", err)
+	}
+
+	time.Sleep(time.Second)
+
+	ctx := context.TODO()
+	if ok, err := db.IsIndex(ctx, index.GetName()); err != nil || !ok {
+		t.Fatal("Not an index, but should be")
+	}
+
+	name = fmt.Sprintf("%d", time.Now().Unix())
+	newIndex, err := index.Index(ctx, index.GetName())
+	if err != nil {
+		log.Fatalf("Index error: %s\n", err)
+	}
+
+	time.Sleep(time.Second)
+
+	if ok, err := db.IsIndex(ctx, newIndex.GetName()); err != nil || !ok {
+		t.Fatal("Not an index, but should be")
+	}
+
+	if ok, _ := db.IsIndex(ctx, fmt.Sprintf("%d", time.Now().Unix())); ok {
+		t.Fatal("Index, but should not be")
+	}
+}
+
+// TestGetIndex
+func TestGetIndex(t *testing.T) {
+	db, err := itisadb.New(":800")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	name := fmt.Sprintf("%d", time.Now().Unix())
+	index, err := db.Index(context.TODO(), name)
+	if err != nil {
+		log.Fatalf("Index error: %s\n", err)
+	}
+
+	data := map[string]string{
+		"key1": "value1",
+		"key2": "value2",
+		"key3": "value3",
+		"key4": "value4",
+		"key5": "value5",
+	}
+
+	for k, v := range data {
+		if _, err = index.Set(context.TODO(), k, v, false); err != nil {
+			t.Fatalf("Set error %v\n", err)
+		}
+	}
+
+	ctx := context.TODO()
+	m, err := index.GetIndex(ctx)
+	if err != nil {
+		t.Fatalf("GetIndex error %v\n", err)
+	}
+
+	if !reflect.DeepEqual(data, m) {
+		t.Fatalf("Wrong data %v\n", m)
+	}
+}
+
 // Test to define rps for SetOne.
 func TestSetOneRPS(t *testing.T) {
 	db, err := itisadb.New(":800")
@@ -361,7 +435,7 @@ func TestSetOneRPS(t *testing.T) {
 			wg.Done()
 			go func(i int) {
 				wg.Wait()
-				db.SetOne(ctx, ints[i], "value", false)
+				db.GetOne(ctx, ints[i])
 				wgSent.Done()
 			}(i)
 
