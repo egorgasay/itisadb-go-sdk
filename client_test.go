@@ -241,7 +241,7 @@ func TestSetGetOneToIndex(t *testing.T) {
 		log.Fatalln(err)
 	}
 
-	_, err = index.Set(context.TODO(), "Name", "Max", false)
+	err = index.Set(context.TODO(), "Name", "Max", false)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -262,7 +262,7 @@ func TestSetGetOneToIndex(t *testing.T) {
 		log.Fatalln(err)
 	}
 
-	_, err = car.Set(context.TODO(), "Name", "MyCar", false)
+	err = car.Set(context.TODO(), "Name", "MyCar", false)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -283,7 +283,7 @@ func TestSetGetOneToIndex(t *testing.T) {
 		log.Fatalln(err)
 	}
 
-	_, err = wheel.Set(context.TODO(), "Color", "Black", false)
+	err = wheel.Set(context.TODO(), "Color", "Black", false)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -304,7 +304,7 @@ func TestSetGetOneToIndex(t *testing.T) {
 		log.Fatalln(err)
 	}
 
-	_, err = trailer.Set(context.TODO(), "Color", "Red", false)
+	err = trailer.Set(context.TODO(), "Color", "Red", false)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -367,6 +367,37 @@ func TestIsIndex(t *testing.T) {
 	}
 }
 
+func TestSize(t *testing.T) {
+	db, err := itisadb.New(":800")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	index, err := db.Index(context.TODO(), fmt.Sprintf("%d", time.Now().Unix()))
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	size, err := index.Size(context.TODO())
+	if err != nil {
+		t.Fatalf("Error %v\n", err)
+	} else if size != 0 {
+		t.Fatalf("Wrong size %d\n", size)
+	}
+
+	for i := 0; i < 100; i++ {
+		k := fmt.Sprint(i)
+		v := fmt.Sprint(i)
+		if err = index.Set(context.TODO(), k, v, false); err != nil {
+			t.Fatalf("Set error %v\n", err)
+		}
+	}
+
+	if size, err := index.Size(context.TODO()); err != nil || size != 100 {
+		t.Fatalf("Wrong size %d\n", size)
+	}
+}
+
 // TestGetIndex
 func TestGetIndex(t *testing.T) {
 	db, err := itisadb.New(":800")
@@ -388,7 +419,7 @@ func TestGetIndex(t *testing.T) {
 	}
 
 	for k, v := range data {
-		if _, err = index.Set(context.TODO(), k, v, false); err != nil {
+		if err = index.Set(context.TODO(), k, v, false); err != nil {
 			t.Fatalf("Set error %v\n", err)
 		}
 	}
