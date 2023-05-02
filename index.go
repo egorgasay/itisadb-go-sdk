@@ -2,6 +2,7 @@ package itisadb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
 	"google.golang.org/grpc/codes"
@@ -13,6 +14,8 @@ type Index struct {
 	name string
 	cl   balancer.BalancerClient
 }
+
+var ErrIndexNotFound = errors.New("index not found")
 
 // Set sets the value for the key in the specified index.
 func (i *Index) Set(ctx context.Context, key, value string, uniques bool) error {
@@ -75,7 +78,10 @@ func (i *Index) GetIndex(ctx context.Context) (map[string]string, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			return nil, ErrIndexNotFound
+		}
+		return nil, fmt.Errorf("an unknown error occurred while deleting the index: %w", err)
 	}
 
 	return r.GetIndex(), nil
@@ -88,8 +94,27 @@ func (i *Index) Size(ctx context.Context) (uint64, error) {
 	})
 
 	if err != nil {
-		return 0, err
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			return 0, ErrIndexNotFound
+		}
+		return 0, fmt.Errorf("an unknown error occurred while deleting the index: %w", err)
 	}
 
 	return r.GetSize(), nil
+}
+
+// Delete deletes the index.
+func (i *Index) Delete(ctx context.Context) error {
+	_, err := i.cl.DeleteIndex(ctx, &balancer.BalancerDeleteIndexRequest{
+		Name: i.name,
+	})
+
+	if err != nil {
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			return ErrIndexNotFound
+		}
+		return fmt.Errorf("an unknown error occurred while deleting the index: %w", err)
+	}
+
+	return nil
 }

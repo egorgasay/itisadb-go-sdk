@@ -33,6 +33,7 @@ type BalancerClient interface {
 	GetIndex(ctx context.Context, in *BalancerGetIndexRequest, opts ...grpc.CallOption) (*BalancerGetIndexResponse, error)
 	IsIndex(ctx context.Context, in *BalancerIsIndexRequest, opts ...grpc.CallOption) (*BalancerIsIndexResponse, error)
 	Size(ctx context.Context, in *BalancerIndexSizeRequest, opts ...grpc.CallOption) (*BalancerIndexSizeResponse, error)
+	DeleteIndex(ctx context.Context, in *BalancerDeleteIndexRequest, opts ...grpc.CallOption) (*BalancerDeleteIndexResponse, error)
 }
 
 type balancerClient struct {
@@ -142,6 +143,15 @@ func (c *balancerClient) Size(ctx context.Context, in *BalancerIndexSizeRequest,
 	return out, nil
 }
 
+func (c *balancerClient) DeleteIndex(ctx context.Context, in *BalancerDeleteIndexRequest, opts ...grpc.CallOption) (*BalancerDeleteIndexResponse, error) {
+	out := new(BalancerDeleteIndexResponse)
+	err := c.cc.Invoke(ctx, "/api.Balancer/DeleteIndex", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BalancerServer is the server API for Balancer service.
 // All implementations must embed UnimplementedBalancerServer
 // for forward compatibility
@@ -157,6 +167,7 @@ type BalancerServer interface {
 	GetIndex(context.Context, *BalancerGetIndexRequest) (*BalancerGetIndexResponse, error)
 	IsIndex(context.Context, *BalancerIsIndexRequest) (*BalancerIsIndexResponse, error)
 	Size(context.Context, *BalancerIndexSizeRequest) (*BalancerIndexSizeResponse, error)
+	DeleteIndex(context.Context, *BalancerDeleteIndexRequest) (*BalancerDeleteIndexResponse, error)
 	mustEmbedUnimplementedBalancerServer()
 }
 
@@ -196,6 +207,9 @@ func (UnimplementedBalancerServer) IsIndex(context.Context, *BalancerIsIndexRequ
 }
 func (UnimplementedBalancerServer) Size(context.Context, *BalancerIndexSizeRequest) (*BalancerIndexSizeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Size not implemented")
+}
+func (UnimplementedBalancerServer) DeleteIndex(context.Context, *BalancerDeleteIndexRequest) (*BalancerDeleteIndexResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteIndex not implemented")
 }
 func (UnimplementedBalancerServer) mustEmbedUnimplementedBalancerServer() {}
 
@@ -408,6 +422,24 @@ func _Balancer_Size_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Balancer_DeleteIndex_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BalancerDeleteIndexRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BalancerServer).DeleteIndex(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Balancer/DeleteIndex",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BalancerServer).DeleteIndex(ctx, req.(*BalancerDeleteIndexRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Balancer_ServiceDesc is the grpc.ServiceDesc for Balancer service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -458,6 +490,10 @@ var Balancer_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Size",
 			Handler:    _Balancer_Size_Handler,
+		},
+		{
+			MethodName: "DeleteIndex",
+			Handler:    _Balancer_DeleteIndex_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
