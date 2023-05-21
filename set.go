@@ -3,7 +3,6 @@ package itisadb
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -28,10 +27,19 @@ func (c *Client) set(ctx context.Context, key, value string, server int32, uniqu
 
 	if err != nil {
 		st, ok := status.FromError(err)
-		if ok && st.Code() == codes.AlreadyExists {
+		if !ok {
+			return 0, err
+		}
+
+		if st.Code() == codes.AlreadyExists {
 			return 0, ErrUniqueConstraint
 		}
-		return 0, fmt.Errorf("an unknown error occurred while setting the value in the storage: %w", err)
+
+		if st.Code() == codes.Unavailable {
+			return 0, ErrUnavailable
+		}
+
+		return 0, err
 	}
 
 	return res.SavedTo, nil

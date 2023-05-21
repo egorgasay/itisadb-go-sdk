@@ -3,7 +3,6 @@ package itisadb
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -28,10 +27,16 @@ func (i *Index) Set(ctx context.Context, key, value string, uniques bool) error 
 
 	if err != nil {
 		st, ok := status.FromError(err)
-		if ok && st.Code() == codes.AlreadyExists {
+		if !ok {
+			return err
+		}
+		if st.Code() == codes.AlreadyExists {
 			return ErrUniqueConstraint
 		}
-		return fmt.Errorf("an unknown error occurred while setting the value in the storage: %w", err)
+		if st.Code() == codes.Unavailable {
+			return ErrUnavailable
+		}
+		return err
 	}
 
 	return nil
@@ -43,8 +48,18 @@ func (i *Index) Get(ctx context.Context, key string) (string, error) {
 		Key:   key,
 		Index: i.name,
 	})
-	if err != nil { // TODO: add more info
-		return "", fmt.Errorf("an unknown error occurred while getting the value from the area: %w", err)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if !ok {
+			return "", err
+		}
+		if st.Code() == codes.NotFound {
+			return "", ErrNotFound
+		}
+		if st.Code() == codes.Unavailable {
+			return "", ErrUnavailable
+		}
+		return "", err
 	}
 	return res.Value, nil
 }
@@ -57,6 +72,16 @@ func (i *Index) Index(ctx context.Context, name string) (*Index, error) {
 	})
 
 	if err != nil {
+		st, ok := status.FromError(err)
+		if !ok {
+			return nil, err
+		}
+		if st.Code() == codes.NotFound {
+			return nil, ErrIndexNotFound
+		}
+		if st.Code() == codes.Unavailable {
+			return nil, ErrUnavailable
+		}
 		return nil, err
 	}
 
@@ -78,10 +103,17 @@ func (i *Index) GetIndex(ctx context.Context) (map[string]string, error) {
 	})
 
 	if err != nil {
-		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+		st, ok := status.FromError(err)
+		if !ok {
+			return nil, err
+		}
+		if st.Code() == codes.NotFound {
 			return nil, ErrIndexNotFound
 		}
-		return nil, fmt.Errorf("an unknown error occurred while deleting the index: %w", err)
+		if st.Code() == codes.Unavailable {
+			return nil, ErrUnavailable
+		}
+		return nil, err
 	}
 
 	return r.GetIndex(), nil
@@ -94,27 +126,63 @@ func (i *Index) Size(ctx context.Context) (uint64, error) {
 	})
 
 	if err != nil {
-		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+		st, ok := status.FromError(err)
+		if !ok {
+			return 0, err
+		}
+		if st.Code() == codes.NotFound {
 			return 0, ErrIndexNotFound
 		}
-		return 0, fmt.Errorf("an unknown error occurred while deleting the index: %w", err)
+		if st.Code() == codes.Unavailable {
+			return 0, ErrUnavailable
+		}
+		return 0, err
 	}
 
 	return r.GetSize(), nil
 }
 
-// Delete deletes the index.
-func (i *Index) Delete(ctx context.Context) error {
+// DeleteIndex deletes the index.
+func (i *Index) DeleteIndex(ctx context.Context) error {
 	_, err := i.cl.DeleteIndex(ctx, &balancer.BalancerDeleteIndexRequest{
-		Name: i.name,
+		Index: i.name,
 	})
 
 	if err != nil {
-		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+		st, ok := status.FromError(err)
+		if !ok {
+			return err
+		}
+		if st.Code() == codes.NotFound {
 			return ErrIndexNotFound
 		}
-		return fmt.Errorf("an unknown error occurred while deleting the index: %w", err)
+		if st.Code() == codes.Unavailable {
+			return ErrUnavailable
+		}
+		return err
 	}
 
+	return nil
+}
+
+// Attach attaches the index to another index.
+func (i *Index) Attach(ctx context.Context, name string) error {
+	_, err := i.cl.AttachToIndex(ctx, &balancer.BalancerAttachToIndexRequest{
+		Dst: i.name,
+		Src: name,
+	})
+	if err != nil {
+		st, ok := status.FromError(err)
+		if !ok {
+			return err
+		}
+		if st.Code() == codes.NotFound {
+			return ErrIndexNotFound
+		}
+		if st.Code() == codes.Unavailable {
+			return ErrUnavailable
+		}
+		return err
+	}
 	return nil
 }

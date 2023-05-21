@@ -2,6 +2,7 @@ package itisadb
 
 import (
 	"context"
+	"errors"
 	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
 	gcredentials "google.golang.org/grpc/credentials"
 	"sync"
@@ -30,6 +31,8 @@ type Key struct {
 	Key  string
 	Opts Opts
 }
+
+var ErrUnavailable = errors.New("storage is unavailable")
 
 func New(balancerIP string, credentials ...gcredentials.TransportCredentials) (*Client, error) {
 	var conn *grpc.ClientConn
