@@ -186,3 +186,30 @@ func (i *Index) Attach(ctx context.Context, name string) error {
 	}
 	return nil
 }
+
+// DeleteAttr deletes the attribute from the index.
+func (i *Index) DeleteAttr(ctx context.Context, key string) error {
+	_, err := i.cl.DeleteAttr(ctx, &balancer.BalancerDeleteAttrRequest{
+		Index: i.name,
+		Key:   key,
+	})
+
+	if err != nil {
+		st, ok := status.FromError(err)
+		if !ok {
+			return err
+		}
+		if st.Code() == codes.ResourceExhausted {
+			return ErrNotFound
+		}
+		if st.Code() == codes.NotFound {
+			return ErrIndexNotFound
+		}
+		if st.Code() == codes.Unavailable {
+			return ErrUnavailable
+		}
+		return err
+	}
+
+	return nil
+}

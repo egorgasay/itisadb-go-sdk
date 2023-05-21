@@ -309,6 +309,88 @@ func TestDeleteIndex(t *testing.T) {
 	}
 }
 
+func TestDeleteAttr(t *testing.T) {
+	db, err := itisadb.New(":800")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	ctx := context.TODO()
+	num := rand.Int31()
+	n := fmt.Sprint(num)
+	name := "TestDeleteAttr" + n
+
+	indx, err := db.Index(ctx, name)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = indx.Set(ctx, "key_for_delete", "value_for_delete", false)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	_, err = indx.Get(ctx, "key_for_delete")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	err = indx.DeleteAttr(ctx, "key_for_delete")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	indx, err = db.Index(ctx, name)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	_, err = indx.Get(ctx, "key_for_delete")
+	if !errors.Is(err, itisadb.ErrNotFound) {
+		t.Fatal("Key should be deleted")
+	}
+
+	// TEST DELETE ATTR INNER INDEX
+
+	name = "inner_index"
+	inner, err := indx.Index(ctx, name)
+	if err != nil {
+		log.Fatalf("Inner index %v: %v", name, err)
+	}
+
+	err = inner.Set(ctx, "key_for_delete", "value_for_delete", false)
+	if err != nil {
+		log.Fatalf("Inner index %v: %v", name, err)
+	}
+
+	_, err = inner.Get(ctx, "key_for_delete")
+	if err != nil {
+		log.Fatalf("Inner index %v: %v", name, err)
+	}
+
+	err = inner.DeleteAttr(ctx, "key_for_delete")
+	if err != nil {
+		log.Fatalf("Inner index %v: %v", name, err)
+	}
+
+	inner, err = indx.Index(ctx, name)
+	if err != nil {
+		log.Fatalf("Inner index %v: %v", name, err)
+	}
+
+	_, err = inner.Get(ctx, "key_for_delete")
+	if !errors.Is(err, itisadb.ErrNotFound) {
+		t.Fatal("Inner Index key should be deleted")
+	}
+
+	// TEST DELETE ATTR (INNER INDEX) KEY DOES NOT EXIST
+
+	err = inner.DeleteAttr(ctx, "key_for_delete_does_not_exist")
+	if !errors.Is(err, itisadb.ErrNotFound) {
+		t.Fatalf("Inner Index key shouldn't be deleted: %v", err)
+	}
+
+}
+
 func TestAttachIndex(t *testing.T) {
 	db, err := itisadb.New(":800")
 	if err != nil {
