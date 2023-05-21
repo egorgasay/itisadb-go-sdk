@@ -25,6 +25,7 @@ type BalancerClient interface {
 	Index(ctx context.Context, in *BalancerIndexRequest, opts ...grpc.CallOption) (*BalancerIndexResponse, error)
 	Set(ctx context.Context, in *BalancerSetRequest, opts ...grpc.CallOption) (*BalancerSetResponse, error)
 	SetToIndex(ctx context.Context, in *BalancerSetToIndexRequest, opts ...grpc.CallOption) (*BalancerSetToIndexResponse, error)
+	AttachToIndex(ctx context.Context, in *BalancerAttachToIndexRequest, opts ...grpc.CallOption) (*BalancerAttachToIndexResponse, error)
 	Get(ctx context.Context, in *BalancerGetRequest, opts ...grpc.CallOption) (*BalancerGetResponse, error)
 	GetFromIndex(ctx context.Context, in *BalancerGetFromIndexRequest, opts ...grpc.CallOption) (*BalancerGetFromIndexResponse, error)
 	Connect(ctx context.Context, in *BalancerConnectRequest, opts ...grpc.CallOption) (*BalancerConnectResponse, error)
@@ -33,6 +34,7 @@ type BalancerClient interface {
 	GetIndex(ctx context.Context, in *BalancerGetIndexRequest, opts ...grpc.CallOption) (*BalancerGetIndexResponse, error)
 	IsIndex(ctx context.Context, in *BalancerIsIndexRequest, opts ...grpc.CallOption) (*BalancerIsIndexResponse, error)
 	Size(ctx context.Context, in *BalancerIndexSizeRequest, opts ...grpc.CallOption) (*BalancerIndexSizeResponse, error)
+	Delete(ctx context.Context, in *BalancerDeleteRequest, opts ...grpc.CallOption) (*BalancerDeleteResponse, error)
 	DeleteIndex(ctx context.Context, in *BalancerDeleteIndexRequest, opts ...grpc.CallOption) (*BalancerDeleteIndexResponse, error)
 }
 
@@ -65,6 +67,15 @@ func (c *balancerClient) Set(ctx context.Context, in *BalancerSetRequest, opts .
 func (c *balancerClient) SetToIndex(ctx context.Context, in *BalancerSetToIndexRequest, opts ...grpc.CallOption) (*BalancerSetToIndexResponse, error) {
 	out := new(BalancerSetToIndexResponse)
 	err := c.cc.Invoke(ctx, "/api.Balancer/SetToIndex", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *balancerClient) AttachToIndex(ctx context.Context, in *BalancerAttachToIndexRequest, opts ...grpc.CallOption) (*BalancerAttachToIndexResponse, error) {
+	out := new(BalancerAttachToIndexResponse)
+	err := c.cc.Invoke(ctx, "/api.Balancer/AttachToIndex", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -143,6 +154,15 @@ func (c *balancerClient) Size(ctx context.Context, in *BalancerIndexSizeRequest,
 	return out, nil
 }
 
+func (c *balancerClient) Delete(ctx context.Context, in *BalancerDeleteRequest, opts ...grpc.CallOption) (*BalancerDeleteResponse, error) {
+	out := new(BalancerDeleteResponse)
+	err := c.cc.Invoke(ctx, "/api.Balancer/Delete", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *balancerClient) DeleteIndex(ctx context.Context, in *BalancerDeleteIndexRequest, opts ...grpc.CallOption) (*BalancerDeleteIndexResponse, error) {
 	out := new(BalancerDeleteIndexResponse)
 	err := c.cc.Invoke(ctx, "/api.Balancer/DeleteIndex", in, out, opts...)
@@ -159,6 +179,7 @@ type BalancerServer interface {
 	Index(context.Context, *BalancerIndexRequest) (*BalancerIndexResponse, error)
 	Set(context.Context, *BalancerSetRequest) (*BalancerSetResponse, error)
 	SetToIndex(context.Context, *BalancerSetToIndexRequest) (*BalancerSetToIndexResponse, error)
+	AttachToIndex(context.Context, *BalancerAttachToIndexRequest) (*BalancerAttachToIndexResponse, error)
 	Get(context.Context, *BalancerGetRequest) (*BalancerGetResponse, error)
 	GetFromIndex(context.Context, *BalancerGetFromIndexRequest) (*BalancerGetFromIndexResponse, error)
 	Connect(context.Context, *BalancerConnectRequest) (*BalancerConnectResponse, error)
@@ -167,6 +188,7 @@ type BalancerServer interface {
 	GetIndex(context.Context, *BalancerGetIndexRequest) (*BalancerGetIndexResponse, error)
 	IsIndex(context.Context, *BalancerIsIndexRequest) (*BalancerIsIndexResponse, error)
 	Size(context.Context, *BalancerIndexSizeRequest) (*BalancerIndexSizeResponse, error)
+	Delete(context.Context, *BalancerDeleteRequest) (*BalancerDeleteResponse, error)
 	DeleteIndex(context.Context, *BalancerDeleteIndexRequest) (*BalancerDeleteIndexResponse, error)
 	mustEmbedUnimplementedBalancerServer()
 }
@@ -183,6 +205,9 @@ func (UnimplementedBalancerServer) Set(context.Context, *BalancerSetRequest) (*B
 }
 func (UnimplementedBalancerServer) SetToIndex(context.Context, *BalancerSetToIndexRequest) (*BalancerSetToIndexResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetToIndex not implemented")
+}
+func (UnimplementedBalancerServer) AttachToIndex(context.Context, *BalancerAttachToIndexRequest) (*BalancerAttachToIndexResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AttachToIndex not implemented")
 }
 func (UnimplementedBalancerServer) Get(context.Context, *BalancerGetRequest) (*BalancerGetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
@@ -207,6 +232,9 @@ func (UnimplementedBalancerServer) IsIndex(context.Context, *BalancerIsIndexRequ
 }
 func (UnimplementedBalancerServer) Size(context.Context, *BalancerIndexSizeRequest) (*BalancerIndexSizeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Size not implemented")
+}
+func (UnimplementedBalancerServer) Delete(context.Context, *BalancerDeleteRequest) (*BalancerDeleteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedBalancerServer) DeleteIndex(context.Context, *BalancerDeleteIndexRequest) (*BalancerDeleteIndexResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteIndex not implemented")
@@ -274,6 +302,24 @@ func _Balancer_SetToIndex_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(BalancerServer).SetToIndex(ctx, req.(*BalancerSetToIndexRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Balancer_AttachToIndex_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BalancerAttachToIndexRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BalancerServer).AttachToIndex(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Balancer/AttachToIndex",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BalancerServer).AttachToIndex(ctx, req.(*BalancerAttachToIndexRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -422,6 +468,24 @@ func _Balancer_Size_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Balancer_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BalancerDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BalancerServer).Delete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.Balancer/Delete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BalancerServer).Delete(ctx, req.(*BalancerDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Balancer_DeleteIndex_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(BalancerDeleteIndexRequest)
 	if err := dec(in); err != nil {
@@ -460,6 +524,10 @@ var Balancer_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Balancer_SetToIndex_Handler,
 		},
 		{
+			MethodName: "AttachToIndex",
+			Handler:    _Balancer_AttachToIndex_Handler,
+		},
+		{
 			MethodName: "Get",
 			Handler:    _Balancer_Get_Handler,
 		},
@@ -490,6 +558,10 @@ var Balancer_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Size",
 			Handler:    _Balancer_Size_Handler,
+		},
+		{
+			MethodName: "Delete",
+			Handler:    _Balancer_Delete_Handler,
 		},
 		{
 			MethodName: "DeleteIndex",

@@ -3,13 +3,14 @@ package itisadb_test
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/egorgasay/itisadb-go-sdk"
 	"log"
+	"math/rand"
 	"os"
 	"reflect"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -209,24 +210,161 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 	}
 }
 
-// Benchmark test for SetOne.
-func BenchmarkSetOne(b *testing.B) {
+func TestDelete(t *testing.T) {
 	db, err := itisadb.New(":800")
 	if err != nil {
-		b.Fatal(err)
+		log.Fatalln(err)
+	}
+	ctx := context.TODO()
+
+	num := rand.Int31()
+	n := fmt.Sprint(num)
+	err = db.SetOne(ctx, "key_for_delete"+n, "value_for_delete", false)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	err = db.Del(ctx, "key_for_delete"+n)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	_, err = db.GetOne(ctx, "key_for_delete"+n)
+	if !errors.Is(err, itisadb.ErrNotFound) {
+		t.Fatalf("Key should be deleted, but %v", err)
+	}
+}
+
+func TestDeleteIndex(t *testing.T) {
+	db, err := itisadb.New(":800")
+	if err != nil {
+		log.Fatalln(err)
 	}
 
 	ctx := context.TODO()
-	j := 1000
-	for i := 0; i < b.N; i++ {
-		b.StopTimer()
-		k := fmt.Sprint(j)
-		j++
-		b.StartTimer()
-		err = db.SetOne(ctx, k, "value", false)
-		if err != nil {
-			b.Fatal(err)
-		}
+	num := rand.Int31()
+	n := fmt.Sprint(num)
+	name := "TestDeleteIndex" + n
+
+	indx, err := db.Index(ctx, name)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = indx.Set(ctx, "key_for_delete", "value_for_delete", false)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	_, err = indx.Get(ctx, "key_for_delete")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	err = indx.DeleteIndex(ctx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	indx, err = db.Index(ctx, name)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	_, err = indx.Get(ctx, "key_for_delete")
+	if !errors.Is(err, itisadb.ErrNotFound) {
+		t.Fatal("Index should be deleted")
+	}
+
+	// TEST DELETE INNER INDEX
+
+	name = "inner_index"
+	inner, err := indx.Index(ctx, name)
+	if err != nil {
+		log.Fatalf("Inner index %v: %v", name, err)
+	}
+
+	err = inner.Set(ctx, "key_for_delete", "value_for_delete", false)
+	if err != nil {
+		log.Fatalf("Inner index %v: %v", name, err)
+	}
+
+	_, err = inner.Get(ctx, "key_for_delete")
+	if err != nil {
+		log.Fatalf("Inner index %v: %v", name, err)
+	}
+
+	err = inner.DeleteIndex(ctx)
+	if err != nil {
+		log.Fatalf("Inner index %v: %v", name, err)
+	}
+
+	inner, err = indx.Index(ctx, name)
+	if err != nil {
+		log.Fatalf("Inner index %v: %v", name, err)
+	}
+
+	_, err = inner.Get(ctx, "key_for_delete")
+	if !errors.Is(err, itisadb.ErrNotFound) {
+		t.Fatal("Inner Index should be deleted")
+	}
+}
+
+func TestAttachIndex(t *testing.T) {
+	db, err := itisadb.New(":800")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	ctx := context.TODO()
+	originalIndex := "TestAttachIndex"
+	indx, err := db.Index(ctx, originalIndex)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	attachedIndex := "TestAttachIndex2"
+	inner, err := db.Index(ctx, attachedIndex)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	err = inner.Set(ctx, "key_for_attach", "value_for_attach", false)
+	if err != nil {
+		log.Fatalf("set Inner index %v: %v", attachedIndex, err)
+	}
+
+	err = indx.Attach(ctx, inner.GetName())
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	innerCopy, err := indx.Index(ctx, attachedIndex)
+	if err != nil {
+		log.Fatalf("main switch index %v: %v", attachedIndex, err)
+	}
+
+	err = innerCopy.Set(ctx, "key_for_attach3", "value_for_attach3", false)
+	if err != nil {
+		log.Fatalf("set Inner index %v: %v", attachedIndex, err)
+	}
+
+	err = inner.Set(ctx, "key_for_attach4", "value_for_attach4", false)
+	if err != nil {
+		log.Fatalf("set Inner index %v: %v", attachedIndex, err)
+	}
+
+	originalAttached, err := inner.GetIndex(ctx)
+	if err != nil {
+		log.Fatalf("get Inner index %v: %v", attachedIndex, err)
+	}
+
+	copiedAttached, err := innerCopy.GetIndex(ctx)
+	if err != nil {
+		log.Fatalf("get Inner index %v: %v", attachedIndex, err)
+	}
+
+	if !reflect.DeepEqual(originalAttached, copiedAttached) {
+		t.Fatalf("Inner index not equal original index:  %v != %v", originalAttached, copiedAttached)
 	}
 }
 
@@ -404,6 +542,9 @@ func TestGetIndex(t *testing.T) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	time.Sleep(time.Second)
+
 	name := fmt.Sprintf("%d", time.Now().Unix())
 	index, err := db.Index(context.TODO(), name)
 	if err != nil {
@@ -433,51 +574,6 @@ func TestGetIndex(t *testing.T) {
 	if !reflect.DeepEqual(data, m) {
 		t.Fatalf("Wrong data %v\n", m)
 	}
-}
-
-// Test to define rps for SetOne.
-func TestSetOneRPS(t *testing.T) {
-	db, err := itisadb.New(":800")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	const gnum = 1500000
-	const maxRPS = 25000
-
-	log.Println("Total actions:", gnum)
-	log.Println("RPS:", maxRPS)
-
-	var ints = make([]string, maxRPS)
-	for i := 0; i < maxRPS; i++ {
-		ints[i] = fmt.Sprint(i)
-	}
-
-	log.Println("Hops:", gnum/maxRPS)
-
-	var total time.Duration
-	for tt := gnum / maxRPS; tt > 0; tt-- {
-		var wg sync.WaitGroup
-		wg.Add(maxRPS)
-
-		var wgSent sync.WaitGroup
-		wgSent.Add(maxRPS)
-		ctx := context.TODO()
-		for i := 0; i < maxRPS; i++ {
-			wg.Done()
-			go func(i int) {
-				wg.Wait()
-				db.GetOne(ctx, ints[i])
-				wgSent.Done()
-			}(i)
-
-		}
-		wg.Wait()
-		start := time.Now()
-		wgSent.Wait()
-		total += time.Since(start)
-		t.Log(time.Since(start))
-	}
-	t.Log(total)
 }
 
 func TestDistinct(t *testing.T) {
