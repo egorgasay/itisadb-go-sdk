@@ -681,3 +681,186 @@ func TestDistinct(t *testing.T) {
 
 	t.Log(len(keys))
 }
+
+func TestClient_StructToIndex(t *testing.T) {
+	db, err := itisadb.New(":800")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	type Wheel struct {
+		Color string
+		Size  string
+	}
+
+	type Trailer struct {
+		Color string
+		Size  string
+	}
+
+	type Car struct {
+		Name    string
+		Wheel   *Wheel
+		Trailer *Trailer
+	}
+
+	type User struct {
+		Name  string
+		Age   int
+		Email string
+		Car   *Car
+	}
+
+	user := User{
+		Name:  "Max",
+		Age:   25,
+		Email: "max@mail.ru",
+		Car: &Car{
+			Name: "MyCar",
+			Wheel: &Wheel{
+				Color: "Black",
+				Size:  "Big",
+			},
+			Trailer: &Trailer{
+				Color: "Red",
+				Size:  "Big",
+			},
+		},
+	}
+
+	index, err := db.StructToIndex(context.TODO(), "User1", user)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	us := &User{}
+	err = db.IndexToStruct(context.TODO(), "User1", us)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mu := map[string]string{
+		"Name":  "Max",
+		"Car":   "\n\tName: MyCar\n\tWheel: \n\t\tSize: Big\n\t\tColor: Black\n\tTrailer: \n\t\t\tColor: Red\n\t\t\tSize: Big",
+		"Age":   "25",
+		"Email": "max@mail.ru",
+	}
+
+	mi, err := index.GetIndex(context.TODO())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	splittedMi := strings.Split(strings.Replace(strings.Replace(mi["Car"], "\t", "", -1), "\n", "", -1), "")
+	splittedMu := strings.Split(strings.Replace(strings.Replace(mu["Car"], "\t", "", -1), "\n", "", -1), "")
+
+	if !IsTheSameArray(splittedMi, splittedMu) {
+		t.Fatalf("want\n%v,\ngot \n%v", splittedMu, splittedMi)
+	}
+
+	delete(mu, "Car")
+	delete(mi, "Car")
+
+	if !reflect.DeepEqual(mi, mu) {
+		t.Fatalf("want\n%v,\ngot \n%v", mu, mi)
+	}
+}
+func IsTheSameArray[T comparable](a, b []T) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	tmp := make(map[T]T)
+	for _, el := range a {
+		tmp[el] = el
+	}
+	for _, el := range b {
+		if _, ok := tmp[el]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func TestClient_IndexToStruct(t *testing.T) {
+	db, err := itisadb.New(":800")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	type Wheel struct {
+		Color string
+		Size  string
+	}
+
+	type Trailer struct {
+		Color string
+		Size  string
+	}
+
+	type Car struct {
+		Name    string
+		Wheel   *Wheel
+		Trailer *Trailer
+	}
+
+	type User struct {
+		Name  string
+		Age   int
+		Email string
+		Car   *Car
+	}
+
+	user := User{
+		Name:  "Max",
+		Age:   25,
+		Email: "max@mail.ru",
+		Car: &Car{
+			Name: "MyCar",
+			Wheel: &Wheel{
+				Color: "Black",
+				Size:  "Big",
+			},
+			Trailer: &Trailer{
+				Color: "Red",
+				Size:  "Big",
+			},
+		},
+	}
+
+	_, err = db.StructToIndex(context.TODO(), "User1", user)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	us := &User{}
+	err = db.IndexToStruct(context.TODO(), "User1", us)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !cmp(user, *us) {
+		t.Fatal("Not equal")
+	}
+
+}
+
+func cmp[V any](a, b V) bool {
+	aVal, bVal := reflect.ValueOf(a), reflect.ValueOf(b)
+	return cmpReflect(aVal, bVal)
+}
+
+func cmpReflect(a, b reflect.Value) bool {
+	for i := 0; i < a.NumField(); i++ {
+		fa, fb := a.Field(i), b.Field(i)
+		if fa.Type().Kind() == reflect.Ptr {
+			if !cmpReflect(fa.Elem(), fb.Elem()) {
+				return false
+			}
+		} else if fa.Interface() != fb.Interface() {
+			fmt.Println(a.Field(i).Interface(), b.Field(i).Interface())
+			return false
+		}
+	}
+	return true
+}

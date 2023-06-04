@@ -9,7 +9,6 @@ import (
 )
 
 type Index struct {
-	next *Index
 	name string
 	cl   balancer.BalancerClient
 }
