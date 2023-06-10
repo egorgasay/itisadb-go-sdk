@@ -89,7 +89,6 @@ func (c *Client) IsIndex(ctx context.Context, name string) (bool, error) {
 }
 
 // StructToIndex creates an index from a struct.
-// TODO: HANDLE reflect.Pointer
 func (c *Client) StructToIndex(ctx context.Context, name string, structure any) (*Index, error) {
 	// checks if it is a struct
 	structureValue := reflect.ValueOf(structure)
@@ -135,8 +134,19 @@ func (c *Client) structToIndex(ctx context.Context, name string, structure any, 
 		switch fieldType.Type.Kind() {
 		case reflect.String:
 			err = index.Set(ctx, key, value.(string), false)
-		case reflect.Pointer: // TODO: handle *str etc and nil
+		case reflect.Struct:
 			_, err = c.structToIndex(ctx, key, value, index)
+		case reflect.Pointer:
+			for field.Type().Kind() == reflect.Pointer {
+				field = field.Elem() // handle nil
+			}
+
+			switch field.Type().Kind() {
+			case reflect.Struct:
+				_, err = c.structToIndex(ctx, key, field.Interface(), index)
+			default:
+				err = index.Set(ctx, key, fmt.Sprint(field.Interface()), false)
+			}
 		default:
 			err = index.Set(ctx, key, fmt.Sprint(value), false)
 		}
@@ -150,6 +160,7 @@ func (c *Client) structToIndex(ctx context.Context, name string, structure any, 
 }
 
 // IndexToStruct creates a struct from an index.
+// Supported field types: Strings, Ints, Uints, Pointers to structs, Structs, Booleans, Floats.
 // TODO: ADD SUPPORT OF STRUCT COMMENTS
 func (c *Client) IndexToStruct(ctx context.Context, name string, obj any) error {
 	// checks if it is a struct
@@ -209,7 +220,50 @@ func (c *Client) indexToStruct(ctx context.Context, name string, obj reflect.Val
 				return err
 			}
 
-			structureValue.FieldByName(key).SetInt(num)
+			field.SetInt(num)
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			val, err = index.Get(ctx, key)
+			if err != nil {
+				return err
+			}
+
+			num, err := strconv.ParseInt(val, 10, 64)
+			if err != nil {
+				return err
+			}
+
+			field.SetUint(uint64(num))
+		case reflect.Struct:
+			field.Set(reflect.New(field.Type()))
+			err = c.indexToStruct(ctx, key, field, index)
+		case reflect.Slice:
+			// TODO: handle slices
+		case reflect.Map:
+			// TODO: handle maps
+		case reflect.Bool:
+			val, err = index.Get(ctx, key)
+			if err != nil {
+				return err
+			}
+
+			boolean, err := strconv.ParseBool(val)
+			if err != nil {
+				return err
+			}
+
+			field.SetBool(boolean)
+		case reflect.Float32, reflect.Float64:
+			val, err = index.Get(ctx, key)
+			if err != nil {
+				return err
+			}
+
+			float, err := strconv.ParseFloat(val, 64)
+			if err != nil {
+				return err
+			}
+
+			field.SetFloat(float)
 		}
 
 		if err != nil {
@@ -218,4 +272,25 @@ func (c *Client) indexToStruct(ctx context.Context, name string, obj reflect.Val
 		}
 	}
 	return nil
+}
+
+func GetCmp[V comparable](ctx context.Context, key V) (V, error) {
+	v := reflect.ValueOf(key)
+	var out = "123"
+	fmt.Println(v.Type().Kind())
+	a := func() any {
+		switch v.Type().Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			num, err := strconv.ParseInt(out, 10, 64)
+			if err != nil {
+				panic("not implemented")
+			}
+			return num
+		case reflect.String:
+			return out
+		}
+		panic("not implemented")
+	}()
+
+	return a.(V), nil
 }

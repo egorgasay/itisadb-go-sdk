@@ -704,11 +704,21 @@ func TestClient_StructToIndex(t *testing.T) {
 		Trailer *Trailer
 	}
 
+	type IQ struct {
+		Count int
+	}
+
+	var t1 = "qwe"
+	var t2 = &t1
+	var t3 = &t2
+
 	type User struct {
 		Name  string
 		Age   int
 		Email string
 		Car   *Car
+		IQ    IQ
+		T     ***string
 	}
 
 	user := User{
@@ -726,15 +736,13 @@ func TestClient_StructToIndex(t *testing.T) {
 				Size:  "Big",
 			},
 		},
+		IQ: IQ{
+			Count: 1,
+		},
+		T: &t3,
 	}
 
-	index, err := db.StructToIndex(context.TODO(), "User1", user)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	us := &User{}
-	err = db.IndexToStruct(context.TODO(), "User1", us)
+	index, err := db.StructToIndex(context.TODO(), fmt.Sprintf("User%d", 1), user)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -744,6 +752,8 @@ func TestClient_StructToIndex(t *testing.T) {
 		"Car":   "\n\tName: MyCar\n\tWheel: \n\t\tSize: Big\n\t\tColor: Black\n\tTrailer: \n\t\t\tColor: Red\n\t\t\tSize: Big",
 		"Age":   "25",
 		"Email": "max@mail.ru",
+		"IQ":    "\n\t\tCount: 1",
+		"T":     "qwe",
 	}
 
 	mi, err := index.GetIndex(context.TODO())
@@ -765,6 +775,7 @@ func TestClient_StructToIndex(t *testing.T) {
 		t.Fatalf("want\n%v,\ngot \n%v", mu, mi)
 	}
 }
+
 func IsTheSameArray[T comparable](a, b []T) bool {
 	if len(a) != len(b) {
 		return false
@@ -842,7 +853,6 @@ func TestClient_IndexToStruct(t *testing.T) {
 	if !cmp(user, *us) {
 		t.Fatal("Not equal")
 	}
-
 }
 
 func cmp[V any](a, b V) bool {
@@ -863,4 +873,21 @@ func cmpReflect(a, b reflect.Value) bool {
 		}
 	}
 	return true
+}
+
+func TestClient2_GetCmp(t *testing.T) {
+	str, err := itisadb.GetCmp[string](context.Background(), "qwe")
+	if err != nil {
+		t.Errorf("GetCmp() error = %v, wantErr no", err)
+		return
+	}
+
+	fmt.Println(str)
+
+	iint, err := itisadb.GetCmp[int64](context.Background(), 123)
+	if err != nil {
+		t.Errorf("GetCmp() error = %v, wantErr no", err)
+		return
+	}
+	fmt.Println(iint)
 }

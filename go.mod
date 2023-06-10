@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/egorgasay/gotils v0.0.3 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
