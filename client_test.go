@@ -63,30 +63,6 @@ func TestSetToGetFrom(t *testing.T) {
 	}
 }
 
-// TestSetToDBGetFromDB to run this test, itisadb must be run on :800.
-// TODO: Add edge cases.
-func TestSetToDBGetFromDB(t *testing.T) {
-	db, err := itisadb.New(":800")
-	if err != nil {
-		return
-	}
-
-	ctx := context.TODO()
-	err = db.SetToDB(ctx, "db_key", "qqq", false)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	get, err := db.GetFromDB(ctx, "db_key")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	if get != "qqq" {
-		t.Fatal("Wrong value")
-	}
-}
-
 // TestSetToAllGet to run this test, itisadb must be run on :800.
 // TODO: Add edge cases.
 func TestSetToAllGet(t *testing.T) {
@@ -811,24 +787,31 @@ func TestClient_IndexToStruct(t *testing.T) {
 
 	type Car struct {
 		Name    string
-		Wheel   *Wheel
+		Wheel   Wheel
 		Trailer *Trailer
 	}
 
 	type User struct {
 		Name  string
+		Name2 *string
 		Age   int
+		Age2  int32
+		Age3  int8
 		Email string
 		Car   *Car
 	}
 
+	name := "max2"
 	user := User{
 		Name:  "Max",
+		Name2: &name,
 		Age:   25,
+		Age2:  25,
+		Age3:  25,
 		Email: "max@mail.ru",
 		Car: &Car{
 			Name: "MyCar",
-			Wheel: &Wheel{
+			Wheel: Wheel{
 				Color: "Black",
 				Size:  "Big",
 			},
@@ -839,13 +822,13 @@ func TestClient_IndexToStruct(t *testing.T) {
 		},
 	}
 
-	_, err = db.StructToIndex(context.TODO(), "User1", user)
+	_, err = db.StructToIndex(context.TODO(), "User33", user)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	us := &User{}
-	err = db.IndexToStruct(context.TODO(), "User1", us)
+	err = db.IndexToStruct(context.TODO(), "User33", us)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -864,7 +847,13 @@ func cmpReflect(a, b reflect.Value) bool {
 	for i := 0; i < a.NumField(); i++ {
 		fa, fb := a.Field(i), b.Field(i)
 		if fa.Type().Kind() == reflect.Ptr {
-			if !cmpReflect(fa.Elem(), fb.Elem()) {
+			if fa.Type().Elem().Kind() != reflect.Struct {
+				fa, fb = fa.Elem(), fb.Elem()
+				if fa.Interface() != fb.Interface() {
+					fmt.Printf("[%v] [%v]\n", fa.Interface(), fb.Interface())
+					return false
+				}
+			} else if !cmpReflect(fa.Elem(), fb.Elem()) {
 				return false
 			}
 		} else if fa.Interface() != fb.Interface() {

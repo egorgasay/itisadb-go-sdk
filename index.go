@@ -52,12 +52,19 @@ func (i *Index) Get(ctx context.Context, key string) (string, error) {
 		if !ok {
 			return "", err
 		}
+
+		if st.Code() == codes.ResourceExhausted {
+			return "", ErrIndexNotFound
+		}
+
 		if st.Code() == codes.NotFound {
 			return "", ErrNotFound
 		}
+
 		if st.Code() == codes.Unavailable {
 			return "", ErrUnavailable
 		}
+
 		return "", err
 	}
 	return res.Value, nil
@@ -76,7 +83,7 @@ func (i *Index) Index(ctx context.Context, name string) (*Index, error) {
 			return nil, err
 		}
 		if st.Code() == codes.NotFound {
-			return nil, ErrIndexNotFound
+			return nil, ErrNotFound
 		}
 		if st.Code() == codes.Unavailable {
 			return nil, ErrUnavailable

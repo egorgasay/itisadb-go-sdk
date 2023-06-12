@@ -187,28 +187,26 @@ func (c *Client) indexToStruct(ctx context.Context, name string, obj reflect.Val
 		return err
 	}
 
-	structureValue := obj.Elem()
+	if obj.Type().Kind() == reflect.Pointer {
+		obj = obj.Elem()
+	}
 
 	val := ""
 
-	for i := 0; i < structureValue.NumField(); i++ {
-		field := structureValue.Field(i)
-		fieldType := structureValue.Type().Field(i)
+	for i := 0; i < obj.NumField(); i++ {
+		field := obj.Field(i)
+		fieldType := obj.Type().Field(i)
 		key := fieldType.Name
 
-		switch fieldType.Type.Kind() {
+	define:
+
+		switch field.Type().Kind() {
 		case reflect.String:
 			val, err = index.Get(ctx, key)
 			if err != nil {
 				return err
 			}
-			structureValue.FieldByName(key).SetString(val)
-		case reflect.Ptr: // TODO: handle *str etc
-			switch field.Type().Elem().Kind() {
-			case reflect.Struct:
-				field.Set(reflect.New(field.Type().Elem()))
-				err = c.indexToStruct(ctx, key, field, index)
-			}
+			field.SetString(val)
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			val, err = index.Get(ctx, key)
 			if err != nil {
@@ -233,8 +231,16 @@ func (c *Client) indexToStruct(ctx context.Context, name string, obj reflect.Val
 			}
 
 			field.SetUint(uint64(num))
+		case reflect.Ptr:
+			field.Set(reflect.New(field.Type().Elem()))
+			if field.Type().Elem().Kind() == reflect.Struct {
+				err = c.indexToStruct(ctx, key, field, index)
+			} else {
+				field = field.Elem()
+				goto define
+			}
 		case reflect.Struct:
-			field.Set(reflect.New(field.Type()))
+			field.Set(reflect.Zero(field.Type()))
 			err = c.indexToStruct(ctx, key, field, index)
 		case reflect.Slice:
 			// TODO: handle slices
