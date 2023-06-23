@@ -19,7 +19,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	get, err := db.GetOne(ctx, "qwe")
+	get, err := db.Get(ctx, "qwe")
 	if err != nil {
 		log.Fatalln(err)
 	}

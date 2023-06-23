@@ -55,7 +55,7 @@ func BenchmarkSetOneRPS(b *testing.B) {
 	b.Log(total)
 }
 
-// Test to define rps for GetOne.
+// Test to define rps for Get.
 func BenchmarkGetOneRPS(b *testing.B) {
 	db, err := itisadb.New(":800")
 	if err != nil {
@@ -86,7 +86,7 @@ func BenchmarkGetOneRPS(b *testing.B) {
 			wg.Done()
 			go func(i int) {
 				wg.Wait()
-				db.GetOne(ctx, ints[i])
+				db.Get(ctx, ints[i])
 				wgSent.Done()
 			}(i)
 
@@ -100,7 +100,7 @@ func BenchmarkGetOneRPS(b *testing.B) {
 	b.Log(total)
 }
 
-// Test to define rps for GetOne.
+// Test to define rps for Get.
 func BenchmarkGetFromDiskIndexRPS(b *testing.B) {
 	db, err := itisadb.New(":800")
 	if err != nil {
@@ -125,7 +125,7 @@ func BenchmarkGetFromDiskIndexRPS(b *testing.B) {
 	}
 }
 
-// Test to define rps for GetOne.
+// Test to define rps for Get.
 func BenchmarkGetFromDiskIndexRPS2(b *testing.B) {
 	db, err := itisadb.New(":800")
 	if err != nil {
