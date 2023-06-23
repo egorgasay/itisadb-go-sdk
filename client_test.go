@@ -864,19 +864,39 @@ func cmpReflect(a, b reflect.Value) bool {
 	return true
 }
 
-func TestClient2_GetCmp(t *testing.T) {
-	str, err := itisadb.GetCmp[string](context.Background(), "qwe")
+func TestClient_GetCmp(t *testing.T) {
+	db, err := itisadb.New(":8888")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	ctx := context.Background()
+
+	err = db.SetOne(ctx, "qwe", "123", false)
+	if err != nil {
+		t.Errorf("SetTo() error = %v, wantErr no", err)
+		return
+	}
+
+	got, err := itisadb.GetCmp[string](ctx, db, "qwe")
 	if err != nil {
 		t.Errorf("GetCmp() error = %v, wantErr no", err)
 		return
 	}
 
-	fmt.Println(str)
+	if got != "123" {
+		t.Errorf("got != want\n%v!=%v", got, "123")
+		return
+	}
 
-	iint, err := itisadb.GetCmp[int64](context.Background(), 123)
+	iint, err := itisadb.GetCmp[int64](ctx, db, "qwe")
 	if err != nil {
 		t.Errorf("GetCmp() error = %v, wantErr no", err)
 		return
 	}
-	fmt.Println(iint)
+
+	if iint != 123 {
+		t.Errorf("got != want\n%v!=%v", iint, 123)
+		return
+	}
 }
