@@ -17,7 +17,7 @@ func BenchmarkSetOneRPS(b *testing.B) {
 		log.Fatalln(err)
 	}
 	const gnum = 1500000
-	const maxRPS = 40000
+	const maxRPS = 25000
 
 	log.Println("Total actions:", gnum)
 	log.Println("RPS:", maxRPS)
