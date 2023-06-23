@@ -41,8 +41,8 @@ func (c *Client) get(ctx context.Context, key string, server int32) (string, err
 	return res.Value, nil
 }
 
-// GetOne gets the value by the key from gRPCis.
-func (c *Client) GetOne(ctx context.Context, key string) (string, error) {
+// Get gets the value by the key from gRPCis.
+func (c *Client) Get(ctx context.Context, key string) (string, error) {
 	if ctx.Err() != nil {
 		return "", ctx.Err()
 	}

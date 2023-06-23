@@ -202,22 +202,51 @@ func (c *Client) indexToStruct(ctx context.Context, name string, obj reflect.Val
 	return nil
 }
 
-func GetCmp[V comparable](ctx context.Context, key V) (V, error) {
-	v := reflect.ValueOf(key)
-	var out = "123"
-	fmt.Println(v.Type().Kind())
+type getter interface {
+	Get(ctx context.Context, key string) (string, error)
+}
+
+var ErrWrongTypeParameter = fmt.Errorf("wrong type parameter")
+
+func GetCmp[V comparable](ctx context.Context, from getter, key string) (val V, err error) {
+	strVal, err := from.Get(ctx, key)
+	if err != nil {
+		return val, nil
+	}
+
+	v := reflect.ValueOf(val)
 	a := func() any {
 		switch v.Type().Kind() {
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			num, err := strconv.ParseInt(out, 10, 64)
+			num, err := strconv.ParseInt(strVal, 10, 64)
 			if err != nil {
-				panic("not implemented")
+				return ErrWrongTypeParameter
 			}
 			return num
 		case reflect.String:
-			return out
+			return strVal
+		case reflect.Bool:
+			b, err := strconv.ParseBool(strVal)
+			if err != nil {
+				return ErrWrongTypeParameter
+			}
+			return b
+		case reflect.Float32, reflect.Float64:
+			num, err := strconv.ParseFloat(strVal, 64)
+			if err != nil {
+				return ErrWrongTypeParameter
+			}
+			return num
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			num, err := strconv.ParseInt(strVal, 10, 64)
+			if err != nil {
+				return ErrWrongTypeParameter
+			}
+			if num < 0 {
+				return ErrWrongTypeParameter
+			}
 		}
-		panic("not implemented")
+		return ErrWrongTypeParameter
 	}()
 
 	return a.(V), nil

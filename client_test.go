@@ -30,7 +30,7 @@ func TestSetGetOne(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	get, err := db.GetOne(ctx, "qwe")
+	get, err := db.Get(ctx, "qwe")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +77,7 @@ func TestSetToAllGet(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	get, err := db.GetOne(ctx, "all_key")
+	get, err := db.Get(ctx, "all_key")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,7 +109,7 @@ func TestSetManyGetMany(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	get, err := db.GetOne(ctx, "m2")
+	get, err := db.Get(ctx, "m2")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,7 +159,7 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	get, err := db.GetOne(ctx, "mo2")
+	get, err := db.Get(ctx, "mo2")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -205,7 +205,7 @@ func TestDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = db.GetOne(ctx, "key_for_delete"+n)
+	_, err = db.Get(ctx, "key_for_delete"+n)
 	if !errors.Is(err, itisadb.ErrNotFound) {
 		t.Fatalf("Key should be deleted, but %v", err)
 	}
