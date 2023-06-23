@@ -56,7 +56,7 @@ func New(balancerIP string, credentials ...gcredentials.TransportCredentials) (*
 	}, nil
 }
 
-// Index creates a new area.
+// Index creates a new index.
 func (c *Client) Index(ctx context.Context, name string) (*Index, error) {
 	_, err := c.cl.Index(ctx, &balancer.BalancerIndexRequest{
 		Name: name,

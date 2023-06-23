@@ -3,13 +3,13 @@ package itisadb
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type Index struct {
-	next *Index
 	name string
 	cl   balancer.BalancerClient
 }
@@ -30,9 +30,15 @@ func (i *Index) Set(ctx context.Context, key, value string, uniques bool) error 
 		if !ok {
 			return err
 		}
+
+		if st.Code() == codes.ResourceExhausted {
+			return ErrIndexNotFound
+		}
+
 		if st.Code() == codes.AlreadyExists {
 			return ErrUniqueConstraint
 		}
+
 		if st.Code() == codes.Unavailable {
 			return ErrUnavailable
 		}
@@ -53,12 +59,19 @@ func (i *Index) Get(ctx context.Context, key string) (string, error) {
 		if !ok {
 			return "", err
 		}
+
+		if st.Code() == codes.ResourceExhausted {
+			return "", ErrIndexNotFound
+		}
+
 		if st.Code() == codes.NotFound {
 			return "", ErrNotFound
 		}
+
 		if st.Code() == codes.Unavailable {
 			return "", ErrUnavailable
 		}
+
 		return "", err
 	}
 	return res.Value, nil
@@ -66,7 +79,7 @@ func (i *Index) Get(ctx context.Context, key string) (string, error) {
 
 // Index returns a new or an existing index.
 func (i *Index) Index(ctx context.Context, name string) (*Index, error) {
-	name = i.name + "/" + name
+	name = fmt.Sprint(i.name, ".", name)
 	_, err := i.cl.Index(ctx, &balancer.BalancerIndexRequest{
 		Name: name,
 	})
@@ -77,7 +90,7 @@ func (i *Index) Index(ctx context.Context, name string) (*Index, error) {
 			return nil, err
 		}
 		if st.Code() == codes.NotFound {
-			return nil, ErrIndexNotFound
+			return nil, ErrNotFound
 		}
 		if st.Code() == codes.Unavailable {
 			return nil, ErrUnavailable
@@ -200,10 +213,10 @@ func (i *Index) DeleteAttr(ctx context.Context, key string) error {
 			return err
 		}
 		if st.Code() == codes.ResourceExhausted {
-			return ErrNotFound
+			return ErrIndexNotFound
 		}
 		if st.Code() == codes.NotFound {
-			return ErrIndexNotFound
+			return ErrNotFound
 		}
 		if st.Code() == codes.Unavailable {
 			return ErrUnavailable

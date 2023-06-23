@@ -10,7 +10,7 @@ import (
 
 const (
 	_ = -iota
-	getFromDB
+	getFromDisk
 )
 
 var ErrNotFound = errors.New("not found")
@@ -61,9 +61,9 @@ func (c *Client) GetFrom(ctx context.Context, key string, server int32) (string,
 	return c.get(ctx, key, server)
 }
 
-// GetFromDB gets the value by key from the physical database.
-func (c *Client) GetFromDB(ctx context.Context, key string) (string, error) {
-	return c.get(ctx, key, getFromDB)
+// GetFromDisk gets the value by key from the physical database.
+func (c *Client) GetFromDisk(ctx context.Context, key string) (string, error) {
+	return c.get(ctx, key, getFromDisk)
 }
 
 // GetMany gets a lot of values from gRPCis.

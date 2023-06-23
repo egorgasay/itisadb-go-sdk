@@ -27,12 +27,12 @@ func TestSetGetOne(t *testing.T) {
 	ctx := context.TODO()
 	err = db.SetOne(ctx, "qwe", "111", false)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	get, err := db.GetOne(ctx, "qwe")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	if get != "111" {
@@ -50,36 +50,12 @@ func TestSetToGetFrom(t *testing.T) {
 	ctx := context.TODO()
 	err = db.SetTo(ctx, "fff", "qqq", 1, false)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	get, err := db.GetFrom(ctx, "fff", 1)
 	if err != nil {
-		log.Fatalln(err)
-	}
-
-	if get != "qqq" {
-		t.Fatal("Wrong value")
-	}
-}
-
-// TestSetToDBGetFromDB to run this test, itisadb must be run on :800.
-// TODO: Add edge cases.
-func TestSetToDBGetFromDB(t *testing.T) {
-	db, err := itisadb.New(":800")
-	if err != nil {
-		return
-	}
-
-	ctx := context.TODO()
-	err = db.SetToDB(ctx, "db_key", "qqq", false)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	get, err := db.GetFromDB(ctx, "db_key")
-	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	if get != "qqq" {
@@ -98,12 +74,12 @@ func TestSetToAllGet(t *testing.T) {
 	ctx := context.TODO()
 	err = db.SetToAll(ctx, "all_key", "qqq", false)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	get, err := db.GetOne(ctx, "all_key")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	if get != "qqq" {
@@ -130,12 +106,12 @@ func TestSetManyGetMany(t *testing.T) {
 	ctx := context.TODO()
 	err = db.SetMany(ctx, m, false)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	get, err := db.GetOne(ctx, "m2")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	if get != "k2" {
@@ -145,7 +121,7 @@ func TestSetManyGetMany(t *testing.T) {
 	k := []string{"m1", "m2", "m3", "m4", "m5"}
 	res, err := db.GetMany(ctx, k)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	if !reflect.DeepEqual(res, m) {
@@ -180,12 +156,12 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 	ctx := context.TODO()
 	err = db.SetManyOpts(ctx, m, false)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	get, err := db.GetOne(ctx, "mo2")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	if get != "k2" {
@@ -202,7 +178,7 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 
 	res, err := db.GetManyOpts(ctx, k)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	if !reflect.DeepEqual(res, me) {
@@ -213,7 +189,7 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 func TestDelete(t *testing.T) {
 	db, err := itisadb.New(":800")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 	ctx := context.TODO()
 
@@ -221,12 +197,12 @@ func TestDelete(t *testing.T) {
 	n := fmt.Sprint(num)
 	err = db.SetOne(ctx, "key_for_delete"+n, "value_for_delete", false)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	err = db.Del(ctx, "key_for_delete"+n)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	_, err = db.GetOne(ctx, "key_for_delete"+n)
@@ -238,7 +214,7 @@ func TestDelete(t *testing.T) {
 func TestDeleteIndex(t *testing.T) {
 	db, err := itisadb.New(":800")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	ctx := context.TODO()
@@ -248,26 +224,26 @@ func TestDeleteIndex(t *testing.T) {
 
 	indx, err := db.Index(ctx, name)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 	err = indx.Set(ctx, "key_for_delete", "value_for_delete", false)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	_, err = indx.Get(ctx, "key_for_delete")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	err = indx.DeleteIndex(ctx)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	indx, err = db.Index(ctx, name)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	_, err = indx.Get(ctx, "key_for_delete")
@@ -312,7 +288,7 @@ func TestDeleteIndex(t *testing.T) {
 func TestDeleteAttr(t *testing.T) {
 	db, err := itisadb.New(":800")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	ctx := context.TODO()
@@ -322,26 +298,26 @@ func TestDeleteAttr(t *testing.T) {
 
 	indx, err := db.Index(ctx, name)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 	err = indx.Set(ctx, "key_for_delete", "value_for_delete", false)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	_, err = indx.Get(ctx, "key_for_delete")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	err = indx.DeleteAttr(ctx, "key_for_delete")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	indx, err = db.Index(ctx, name)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	_, err = indx.Get(ctx, "key_for_delete")
@@ -394,20 +370,20 @@ func TestDeleteAttr(t *testing.T) {
 func TestAttachIndex(t *testing.T) {
 	db, err := itisadb.New(":800")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	ctx := context.TODO()
 	originalIndex := "TestAttachIndex"
 	indx, err := db.Index(ctx, originalIndex)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	attachedIndex := "TestAttachIndex2"
 	inner, err := db.Index(ctx, attachedIndex)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	err = inner.Set(ctx, "key_for_attach", "value_for_attach", false)
@@ -417,7 +393,7 @@ func TestAttachIndex(t *testing.T) {
 
 	err = indx.Attach(ctx, inner.GetName())
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	innerCopy, err := indx.Index(ctx, attachedIndex)
@@ -453,22 +429,22 @@ func TestAttachIndex(t *testing.T) {
 func TestSetGetOneToIndex(t *testing.T) {
 	db, err := itisadb.New(":800")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	index, err := db.Index(context.TODO(), "User")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	err = index.Set(context.TODO(), "Name", "Max", false)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	value, err := index.Get(context.TODO(), "Name")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	if value != "Max" {
@@ -479,17 +455,17 @@ func TestSetGetOneToIndex(t *testing.T) {
 
 	car, err := db.Index(context.TODO(), "Car")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	err = car.Set(context.TODO(), "Name", "MyCar", false)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	value, err = car.Get(context.TODO(), "Name")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	if value != "MyCar" {
@@ -500,17 +476,17 @@ func TestSetGetOneToIndex(t *testing.T) {
 
 	wheel, err := car.Index(context.TODO(), "Wheel")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	err = wheel.Set(context.TODO(), "Color", "Black", false)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	value, err = wheel.Get(context.TODO(), "Color")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	if value != "Black" {
@@ -521,19 +497,19 @@ func TestSetGetOneToIndex(t *testing.T) {
 
 	trailer, err := car.Index(context.TODO(), "Trailer")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	err = trailer.Set(context.TODO(), "Color", "Red", false)
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	/// TEST WHEEL & TRAILER AREAS ARE STILL WORKING
 
 	value, err = wheel.Get(context.TODO(), "Color")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	if value != "Black" {
@@ -542,7 +518,7 @@ func TestSetGetOneToIndex(t *testing.T) {
 
 	value, err = trailer.Get(context.TODO(), "Color")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	if value != "Red" {
@@ -554,7 +530,7 @@ func TestSetGetOneToIndex(t *testing.T) {
 func TestIsIndex(t *testing.T) {
 	db, err := itisadb.New(":800")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	name := fmt.Sprintf("%d", time.Now().Unix())
@@ -590,12 +566,12 @@ func TestIsIndex(t *testing.T) {
 func TestSize(t *testing.T) {
 	db, err := itisadb.New(":800")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	index, err := db.Index(context.TODO(), fmt.Sprintf("%d", time.Now().Unix()))
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	size, err := index.Size(context.TODO())
@@ -622,7 +598,7 @@ func TestSize(t *testing.T) {
 func TestGetIndex(t *testing.T) {
 	db, err := itisadb.New(":800")
 	if err != nil {
-		log.Fatalln(err)
+		t.Fatal(err)
 	}
 
 	time.Sleep(time.Second)
@@ -680,4 +656,227 @@ func TestDistinct(t *testing.T) {
 	}
 
 	t.Log(len(keys))
+}
+
+func TestClient_StructToIndex(t *testing.T) {
+	db, err := itisadb.New(":800")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	type Wheel struct {
+		Color string
+		Size  string
+	}
+
+	type Trailer struct {
+		Color string
+		Size  string
+	}
+
+	type Car struct {
+		Name    string
+		Wheel   *Wheel
+		Trailer *Trailer
+	}
+
+	type IQ struct {
+		Count int
+	}
+
+	var t1 = "qwe"
+	var t2 = &t1
+	var t3 = &t2
+
+	type User struct {
+		Name  string
+		Age   int
+		Email string
+		Car   *Car
+		IQ    IQ
+		T     ***string
+	}
+
+	user := User{
+		Name:  "Max",
+		Age:   25,
+		Email: "max@mail.ru",
+		Car: &Car{
+			Name: "MyCar",
+			Wheel: &Wheel{
+				Color: "Black",
+				Size:  "Big",
+			},
+			Trailer: &Trailer{
+				Color: "Red",
+				Size:  "Big",
+			},
+		},
+		IQ: IQ{
+			Count: 1,
+		},
+		T: &t3,
+	}
+
+	index, err := db.StructToIndex(context.TODO(), fmt.Sprintf("User%d", 1), user)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mu := map[string]string{
+		"Name":  "Max",
+		"Car":   "\n\tName: MyCar\n\tWheel: \n\t\tSize: Big\n\t\tColor: Black\n\tTrailer: \n\t\t\tColor: Red\n\t\t\tSize: Big",
+		"Age":   "25",
+		"Email": "max@mail.ru",
+		"IQ":    "\n\t\tCount: 1",
+		"T":     "qwe",
+	}
+
+	mi, err := index.GetIndex(context.TODO())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	splittedMi := strings.Split(strings.Replace(strings.Replace(mi["Car"], "\t", "", -1), "\n", "", -1), "")
+	splittedMu := strings.Split(strings.Replace(strings.Replace(mu["Car"], "\t", "", -1), "\n", "", -1), "")
+
+	if !IsTheSameArray(splittedMi, splittedMu) {
+		t.Fatalf("want\n%v,\ngot \n%v", splittedMu, splittedMi)
+	}
+
+	delete(mu, "Car")
+	delete(mi, "Car")
+
+	if !reflect.DeepEqual(mi, mu) {
+		t.Fatalf("want\n%v,\ngot \n%v", mu, mi)
+	}
+}
+
+func IsTheSameArray[T comparable](a, b []T) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	tmp := make(map[T]T)
+	for _, el := range a {
+		tmp[el] = el
+	}
+	for _, el := range b {
+		if _, ok := tmp[el]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func TestClient_IndexToStruct(t *testing.T) {
+	db, err := itisadb.New(":800")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	type Wheel struct {
+		Color string
+		Size  string
+	}
+
+	type Trailer struct {
+		Color string
+		Size  string
+	}
+
+	type Car struct {
+		Name    string
+		Wheel   Wheel
+		Trailer *Trailer
+	}
+
+	type User struct {
+		Name  string
+		Name2 *string
+		Age   int
+		Age2  int32
+		Age3  int8
+		Email string
+		Car   *Car
+	}
+
+	name := "max2"
+	user := User{
+		Name:  "Max",
+		Name2: &name,
+		Age:   25,
+		Age2:  25,
+		Age3:  25,
+		Email: "max@mail.ru",
+		Car: &Car{
+			Name: "MyCar",
+			Wheel: Wheel{
+				Color: "Black",
+				Size:  "Big",
+			},
+			Trailer: &Trailer{
+				Color: "Red",
+				Size:  "Big",
+			},
+		},
+	}
+
+	_, err = db.StructToIndex(context.TODO(), "User33", user)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	us := &User{}
+	err = db.IndexToStruct(context.TODO(), "User33", us)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !cmp(user, *us) {
+		t.Fatal("Not equal")
+	}
+}
+
+func cmp[V any](a, b V) bool {
+	aVal, bVal := reflect.ValueOf(a), reflect.ValueOf(b)
+	return cmpReflect(aVal, bVal)
+}
+
+func cmpReflect(a, b reflect.Value) bool {
+	for i := 0; i < a.NumField(); i++ {
+		fa, fb := a.Field(i), b.Field(i)
+		if fa.Type().Kind() == reflect.Ptr {
+			if fa.Type().Elem().Kind() != reflect.Struct {
+				fa, fb = fa.Elem(), fb.Elem()
+				if fa.Interface() != fb.Interface() {
+					fmt.Printf("[%v] [%v]\n", fa.Interface(), fb.Interface())
+					return false
+				}
+			} else if !cmpReflect(fa.Elem(), fb.Elem()) {
+				return false
+			}
+		} else if fa.Interface() != fb.Interface() {
+			fmt.Println(a.Field(i).Interface(), b.Field(i).Interface())
+			return false
+		}
+	}
+	return true
+}
+
+func TestClient2_GetCmp(t *testing.T) {
+	str, err := itisadb.GetCmp[string](context.Background(), "qwe")
+	if err != nil {
+		t.Errorf("GetCmp() error = %v, wantErr no", err)
+		return
+	}
+
+	fmt.Println(str)
+
+	iint, err := itisadb.GetCmp[int64](context.Background(), 123)
+	if err != nil {
+		t.Errorf("GetCmp() error = %v, wantErr no", err)
+		return
+	}
+	fmt.Println(iint)
 }

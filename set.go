@@ -10,9 +10,9 @@ import (
 
 const (
 	setDefault = -iota
-	setToDB
+	setToDisk
 	setToAll
-	setToAllAndToDB
+	setToAllAndToDisk
 )
 
 var ErrUniqueConstraint = errors.New("unique constraint failed")
@@ -65,9 +65,9 @@ func (c *Client) SetTo(ctx context.Context, key, value string, server int32, uni
 	return err
 }
 
-// SetToDB sets the value for the key in the physical database.
-func (c *Client) SetToDB(ctx context.Context, key, value string, uniques bool) error {
-	_, err := c.set(ctx, key, value, setToDB, uniques)
+// SetToDisk sets the value for the key in the physical database.
+func (c *Client) SetToDisk(ctx context.Context, key, value string, uniques bool) error {
+	_, err := c.set(ctx, key, value, setToDisk, uniques)
 	return err
 }
 
@@ -77,9 +77,9 @@ func (c *Client) SetToAll(ctx context.Context, key, value string, uniques bool) 
 	return err
 }
 
-// SetToAllAndToDB sets the value for the key on all servers and in th physical database.
-func (c *Client) SetToAllAndToDB(ctx context.Context, key, value string, uniques bool) error {
-	_, err := c.set(ctx, key, value, setToAllAndToDB, uniques)
+// SetToAllAndToDisk sets the value for the key on all servers and in th physical database.
+func (c *Client) SetToAllAndToDisk(ctx context.Context, key, value string, uniques bool) error {
+	_, err := c.set(ctx, key, value, setToAllAndToDisk, uniques)
 	return err
 }
 
