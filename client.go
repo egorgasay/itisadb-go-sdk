@@ -56,9 +56,9 @@ func New(balancerIP string, credentials ...gcredentials.TransportCredentials) (*
 	}, nil
 }
 
-// Index creates a new index.
-func (c *Client) Index(ctx context.Context, name string) (*Index, error) {
-	_, err := c.cl.Index(ctx, &balancer.BalancerIndexRequest{
+// Object creates a new object.
+func (c *Client) Object(ctx context.Context, name string) (*Object, error) {
+	_, err := c.cl.Object(ctx, &balancer.BalancerObjectRequest{
 		Name: name,
 	})
 
@@ -66,15 +66,15 @@ func (c *Client) Index(ctx context.Context, name string) (*Index, error) {
 		return nil, err
 	}
 
-	return &Index{
+	return &Object{
 		name: name,
 		cl:   c.cl,
 	}, nil
 }
 
-// IsIndex checks if it is an index or not.
-func (c *Client) IsIndex(ctx context.Context, name string) (bool, error) {
-	r, err := c.cl.IsIndex(ctx, &balancer.BalancerIsIndexRequest{
+// IsObject checks if it is an object or not.
+func (c *Client) IsObject(ctx context.Context, name string) (bool, error) {
+	r, err := c.cl.IsObject(ctx, &balancer.BalancerIsObjectRequest{
 		Name: name,
 	})
 

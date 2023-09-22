@@ -9,19 +9,19 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type Index struct {
+type Object struct {
 	name string
 	cl   balancer.BalancerClient
 }
 
-var ErrIndexNotFound = errors.New("index not found")
+var ErrObjectNotFound = errors.New("object not found")
 
-// Set sets the value for the key in the specified index.
-func (i *Index) Set(ctx context.Context, key, value string, uniques bool) error {
-	_, err := i.cl.SetToIndex(ctx, &balancer.BalancerSetToIndexRequest{
+// Set sets the value for the key in the specified object.
+func (i *Object) Set(ctx context.Context, key, value string, uniques bool) error {
+	_, err := i.cl.SetToObject(ctx, &balancer.BalancerSetToObjectRequest{
 		Key:     key,
 		Value:   value,
-		Index:   i.name,
+		Object:  i.name,
 		Uniques: uniques,
 	})
 
@@ -32,7 +32,7 @@ func (i *Index) Set(ctx context.Context, key, value string, uniques bool) error 
 		}
 
 		if st.Code() == codes.ResourceExhausted {
-			return ErrIndexNotFound
+			return ErrObjectNotFound
 		}
 
 		if st.Code() == codes.AlreadyExists {
@@ -48,11 +48,11 @@ func (i *Index) Set(ctx context.Context, key, value string, uniques bool) error 
 	return nil
 }
 
-// Get gets the value for the key from the specified index.
-func (i *Index) Get(ctx context.Context, key string) (string, error) {
-	res, err := i.cl.GetFromIndex(ctx, &balancer.BalancerGetFromIndexRequest{
-		Key:   key,
-		Index: i.name,
+// Get gets the value for the key from the specified object.
+func (i *Object) Get(ctx context.Context, key string) (string, error) {
+	res, err := i.cl.GetFromObject(ctx, &balancer.BalancerGetFromObjectRequest{
+		Key:    key,
+		Object: i.name,
 	})
 	if err != nil {
 		st, ok := status.FromError(err)
@@ -61,7 +61,7 @@ func (i *Index) Get(ctx context.Context, key string) (string, error) {
 		}
 
 		if st.Code() == codes.ResourceExhausted {
-			return "", ErrIndexNotFound
+			return "", ErrObjectNotFound
 		}
 
 		if st.Code() == codes.NotFound {
@@ -77,10 +77,10 @@ func (i *Index) Get(ctx context.Context, key string) (string, error) {
 	return res.Value, nil
 }
 
-// Index returns a new or an existing index.
-func (i *Index) Index(ctx context.Context, name string) (*Index, error) {
+// Object returns a new or an existing object.
+func (i *Object) Object(ctx context.Context, name string) (*Object, error) {
 	name = fmt.Sprint(i.name, ".", name)
-	_, err := i.cl.Index(ctx, &balancer.BalancerIndexRequest{
+	_, err := i.cl.Object(ctx, &balancer.BalancerObjectRequest{
 		Name: name,
 	})
 
@@ -98,43 +98,43 @@ func (i *Index) Index(ctx context.Context, name string) (*Index, error) {
 		return nil, err
 	}
 
-	return &Index{
+	return &Object{
 		name: name,
 		cl:   i.cl,
 	}, nil
 }
 
-// GetName returns the name of the index.
-func (i *Index) GetName() string {
+// GetName returns the name of the object.
+func (i *Object) GetName() string {
 	return i.name
 }
 
-// GetIndex returns the index.
-func (i *Index) GetIndex(ctx context.Context) (map[string]string, error) {
-	r, err := i.cl.GetIndex(ctx, &balancer.BalancerGetIndexRequest{
+// JSON returns the object in JSON.
+func (i *Object) JSON(ctx context.Context) (string, error) {
+	r, err := i.cl.ObjectToJSON(ctx, &balancer.BalancerObjectToJSONRequest{
 		Name: i.name,
 	})
 
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok {
-			return nil, err
+			return "", err
 		}
 		if st.Code() == codes.NotFound {
-			return nil, ErrIndexNotFound
+			return "", ErrObjectNotFound
 		}
 		if st.Code() == codes.Unavailable {
-			return nil, ErrUnavailable
+			return "", ErrUnavailable
 		}
-		return nil, err
+		return "", err
 	}
 
-	return r.GetIndex(), nil
+	return r.GetObject(), nil
 }
 
-// Size returns  the size of the index.
-func (i *Index) Size(ctx context.Context) (uint64, error) {
-	r, err := i.cl.Size(ctx, &balancer.BalancerIndexSizeRequest{
+// Size returns  the size of the object.
+func (i *Object) Size(ctx context.Context) (uint64, error) {
+	r, err := i.cl.Size(ctx, &balancer.BalancerObjectSizeRequest{
 		Name: i.name,
 	})
 
@@ -144,7 +144,7 @@ func (i *Index) Size(ctx context.Context) (uint64, error) {
 			return 0, err
 		}
 		if st.Code() == codes.NotFound {
-			return 0, ErrIndexNotFound
+			return 0, ErrObjectNotFound
 		}
 		if st.Code() == codes.Unavailable {
 			return 0, ErrUnavailable
@@ -155,10 +155,10 @@ func (i *Index) Size(ctx context.Context) (uint64, error) {
 	return r.GetSize(), nil
 }
 
-// DeleteIndex deletes the index.
-func (i *Index) DeleteIndex(ctx context.Context) error {
-	_, err := i.cl.DeleteIndex(ctx, &balancer.BalancerDeleteIndexRequest{
-		Index: i.name,
+// DeleteObject deletes the object.
+func (i *Object) DeleteObject(ctx context.Context) error {
+	_, err := i.cl.DeleteObject(ctx, &balancer.BalancerDeleteObjectRequest{
+		Object: i.name,
 	})
 
 	if err != nil {
@@ -167,7 +167,7 @@ func (i *Index) DeleteIndex(ctx context.Context) error {
 			return err
 		}
 		if st.Code() == codes.NotFound {
-			return ErrIndexNotFound
+			return ErrObjectNotFound
 		}
 		if st.Code() == codes.Unavailable {
 			return ErrUnavailable
@@ -178,9 +178,9 @@ func (i *Index) DeleteIndex(ctx context.Context) error {
 	return nil
 }
 
-// Attach attaches the index to another index.
-func (i *Index) Attach(ctx context.Context, name string) error {
-	_, err := i.cl.AttachToIndex(ctx, &balancer.BalancerAttachToIndexRequest{
+// Attach attaches the object to another object.
+func (i *Object) Attach(ctx context.Context, name string) error {
+	_, err := i.cl.AttachToObject(ctx, &balancer.BalancerAttachToObjectRequest{
 		Dst: i.name,
 		Src: name,
 	})
@@ -190,7 +190,7 @@ func (i *Index) Attach(ctx context.Context, name string) error {
 			return err
 		}
 		if st.Code() == codes.NotFound {
-			return ErrIndexNotFound
+			return ErrObjectNotFound
 		}
 		if st.Code() == codes.Unavailable {
 			return ErrUnavailable
@@ -200,11 +200,11 @@ func (i *Index) Attach(ctx context.Context, name string) error {
 	return nil
 }
 
-// DeleteAttr deletes the attribute from the index.
-func (i *Index) DeleteAttr(ctx context.Context, key string) error {
+// DeleteAttr deletes the attribute from the object.
+func (i *Object) DeleteAttr(ctx context.Context, key string) error {
 	_, err := i.cl.DeleteAttr(ctx, &balancer.BalancerDeleteAttrRequest{
-		Index: i.name,
-		Key:   key,
+		Object: i.name,
+		Key:    key,
 	})
 
 	if err != nil {
@@ -213,7 +213,7 @@ func (i *Index) DeleteAttr(ctx context.Context, key string) error {
 			return err
 		}
 		if st.Code() == codes.ResourceExhausted {
-			return ErrIndexNotFound
+			return ErrObjectNotFound
 		}
 		if st.Code() == codes.NotFound {
 			return ErrNotFound

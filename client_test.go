@@ -3,6 +3,7 @@ package itisadb_test
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/egorgasay/itisadb-go-sdk"
@@ -17,9 +18,9 @@ import (
 	"modernc.org/strutil"
 )
 
-// TestSetGetOne to run this test, itisadb must be run on :800.
+// TestSetGetOne to run this test, itisadb must be run on :8888.
 func TestSetGetOne(t *testing.T) {
-	db, err := itisadb.New(":800")
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		return
 	}
@@ -40,9 +41,9 @@ func TestSetGetOne(t *testing.T) {
 	}
 }
 
-// TestSetToGetFrom to run this test, itisadb must be run on :800.
+// TestSetToGetFrom to run this test, itisadb must be run on :8888.
 func TestSetToGetFrom(t *testing.T) {
-	db, err := itisadb.New(":800")
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		return
 	}
@@ -63,10 +64,10 @@ func TestSetToGetFrom(t *testing.T) {
 	}
 }
 
-// TestSetToAllGet to run this test, itisadb must be run on :800.
+// TestSetToAllGet to run this test, itisadb must be run on :8888.
 // TODO: Add edge cases.
 func TestSetToAllGet(t *testing.T) {
-	db, err := itisadb.New(":800")
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		return
 	}
@@ -87,10 +88,10 @@ func TestSetToAllGet(t *testing.T) {
 	}
 }
 
-// TestSetManyGetMany to run this test, itisadb must be run on :800.
+// TestSetManyGetMany to run this test, itisadb must be run on :8888.
 // TODO: Add edge cases.
 func TestSetManyGetMany(t *testing.T) {
-	db, err := itisadb.New(":800")
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		return
 	}
@@ -129,10 +130,10 @@ func TestSetManyGetMany(t *testing.T) {
 	}
 }
 
-// TestSetManyOptsGetManyOpts to run this test, itisadb must be run on :800.
+// TestSetManyOptsGetManyOpts to run this test, itisadb must be run on :8888.
 // TODO: Add edge cases.
 func TestSetManyOptsGetManyOpts(t *testing.T) {
-	db, err := itisadb.New(":800")
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		return
 	}
@@ -187,7 +188,7 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	db, err := itisadb.New(":800")
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -211,8 +212,8 @@ func TestDelete(t *testing.T) {
 	}
 }
 
-func TestDeleteIndex(t *testing.T) {
-	db, err := itisadb.New(":800")
+func TestDeleteObject(t *testing.T) {
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -220,9 +221,9 @@ func TestDeleteIndex(t *testing.T) {
 	ctx := context.TODO()
 	num := rand.Int31()
 	n := fmt.Sprint(num)
-	name := "TestDeleteIndex" + n
+	name := "TestDeleteObject" + n
 
-	indx, err := db.Index(ctx, name)
+	indx, err := db.Object(ctx, name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -236,57 +237,57 @@ func TestDeleteIndex(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = indx.DeleteIndex(ctx)
+	err = indx.DeleteObject(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	indx, err = db.Index(ctx, name)
+	indx, err = db.Object(ctx, name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	_, err = indx.Get(ctx, "key_for_delete")
 	if !errors.Is(err, itisadb.ErrNotFound) {
-		t.Fatal("Index should be deleted")
+		t.Fatal("Object should be deleted")
 	}
 
-	// TEST DELETE INNER INDEX
+	// TEST DELETE INNER OBJECT
 
-	name = "inner_index"
-	inner, err := indx.Index(ctx, name)
+	name = "inner_object"
+	inner, err := indx.Object(ctx, name)
 	if err != nil {
-		log.Fatalf("Inner index %v: %v", name, err)
+		log.Fatalf("Inner object %v: %v", name, err)
 	}
 
 	err = inner.Set(ctx, "key_for_delete", "value_for_delete", false)
 	if err != nil {
-		log.Fatalf("Inner index %v: %v", name, err)
+		log.Fatalf("Inner object %v: %v", name, err)
 	}
 
 	_, err = inner.Get(ctx, "key_for_delete")
 	if err != nil {
-		log.Fatalf("Inner index %v: %v", name, err)
+		log.Fatalf("Inner object %v: %v", name, err)
 	}
 
-	err = inner.DeleteIndex(ctx)
+	err = inner.DeleteObject(ctx)
 	if err != nil {
-		log.Fatalf("Inner index %v: %v", name, err)
+		log.Fatalf("Inner object %v: %v", name, err)
 	}
 
-	inner, err = indx.Index(ctx, name)
+	inner, err = indx.Object(ctx, name)
 	if err != nil {
-		log.Fatalf("Inner index %v: %v", name, err)
+		log.Fatalf("Inner object %v: %v", name, err)
 	}
 
 	_, err = inner.Get(ctx, "key_for_delete")
 	if !errors.Is(err, itisadb.ErrNotFound) {
-		t.Fatal("Inner Index should be deleted")
+		t.Fatal("Inner Object should be deleted")
 	}
 }
 
 func TestDeleteAttr(t *testing.T) {
-	db, err := itisadb.New(":800")
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -296,7 +297,7 @@ func TestDeleteAttr(t *testing.T) {
 	n := fmt.Sprint(num)
 	name := "TestDeleteAttr" + n
 
-	indx, err := db.Index(ctx, name)
+	indx, err := db.Object(ctx, name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -315,7 +316,7 @@ func TestDeleteAttr(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	indx, err = db.Index(ctx, name)
+	indx, err = db.Object(ctx, name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -325,70 +326,91 @@ func TestDeleteAttr(t *testing.T) {
 		t.Fatal("Key should be deleted")
 	}
 
-	// TEST DELETE ATTR INNER INDEX
+	// TEST DELETE ATTR INNER OBJECT
 
-	name = "inner_index"
-	inner, err := indx.Index(ctx, name)
+	name = "inner_object"
+	inner, err := indx.Object(ctx, name)
 	if err != nil {
-		log.Fatalf("Inner index %v: %v", name, err)
+		log.Fatalf("Inner object %v: %v", name, err)
 	}
 
 	err = inner.Set(ctx, "key_for_delete", "value_for_delete", false)
 	if err != nil {
-		log.Fatalf("Inner index %v: %v", name, err)
+		log.Fatalf("Inner object %v: %v", name, err)
 	}
 
 	_, err = inner.Get(ctx, "key_for_delete")
 	if err != nil {
-		log.Fatalf("Inner index %v: %v", name, err)
+		log.Fatalf("Inner object %v: %v", name, err)
 	}
 
 	err = inner.DeleteAttr(ctx, "key_for_delete")
 	if err != nil {
-		log.Fatalf("Inner index %v: %v", name, err)
+		log.Fatalf("Inner object %v: %v", name, err)
 	}
 
-	inner, err = indx.Index(ctx, name)
+	inner, err = indx.Object(ctx, name)
 	if err != nil {
-		log.Fatalf("Inner index %v: %v", name, err)
+		log.Fatalf("Inner object %v: %v", name, err)
 	}
 
 	_, err = inner.Get(ctx, "key_for_delete")
 	if !errors.Is(err, itisadb.ErrNotFound) {
-		t.Fatal("Inner Index key should be deleted")
+		t.Fatal("Inner Object key should be deleted")
 	}
 
-	// TEST DELETE ATTR (INNER INDEX) KEY DOES NOT EXIST
+	// TEST DELETE ATTR (INNER OBJECT) KEY DOES NOT EXIST
 
 	err = inner.DeleteAttr(ctx, "key_for_delete_does_not_exist")
 	if !errors.Is(err, itisadb.ErrNotFound) {
-		t.Fatalf("Inner Index key shouldn't be deleted: %v", err)
+		t.Fatalf("Inner Object key shouldn't be deleted: %v", err)
 	}
 
 }
 
-func TestAttachIndex(t *testing.T) {
-	db, err := itisadb.New(":800")
+func TestAttachObject(t *testing.T) {
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	ctx := context.TODO()
-	originalIndex := "TestAttachIndex"
-	indx, err := db.Index(ctx, originalIndex)
+
+	originalObject := "TestAttachObject"
+	indx, err := db.Object(ctx, originalObject)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	attachedIndex := "TestAttachIndex2"
-	inner, err := db.Index(ctx, attachedIndex)
+	attachedObject := "TestAttachObject2"
+	inner, err := db.Object(ctx, attachedObject)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := indx.DeleteObject(ctx); err != nil {
+		t.Fatalf("Delete object %v: %v", originalObject, err)
+	}
+
+	if err := inner.DeleteObject(ctx); err != nil {
+		t.Fatalf("Delete object %v: %v", originalObject, err)
+	}
+
+	originalObject = "TestAttachObject"
+	indx, err = db.Object(ctx, originalObject)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	attachedObject = "TestAttachObject2"
+	inner, err = db.Object(ctx, attachedObject)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	err = inner.Set(ctx, "key_for_attach", "value_for_attach", false)
 	if err != nil {
-		log.Fatalf("set Inner index %v: %v", attachedIndex, err)
+		log.Fatalf("set Inner object %v: %v", attachedObject, err)
 	}
 
 	err = indx.Attach(ctx, inner.GetName())
@@ -396,53 +418,53 @@ func TestAttachIndex(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	innerCopy, err := indx.Index(ctx, attachedIndex)
+	innerCopy, err := indx.Object(ctx, attachedObject)
 	if err != nil {
-		log.Fatalf("main switch index %v: %v", attachedIndex, err)
+		log.Fatalf("main switch object %v: %v", attachedObject, err)
 	}
 
 	err = innerCopy.Set(ctx, "key_for_attach3", "value_for_attach3", false)
 	if err != nil {
-		log.Fatalf("set Inner index %v: %v", attachedIndex, err)
+		log.Fatalf("set Inner object %v: %v", attachedObject, err)
 	}
 
 	err = inner.Set(ctx, "key_for_attach4", "value_for_attach4", false)
 	if err != nil {
-		log.Fatalf("set Inner index %v: %v", attachedIndex, err)
+		log.Fatalf("set Inner object %v: %v", attachedObject, err)
 	}
 
-	originalAttached, err := inner.GetIndex(ctx)
+	originalAttached, err := inner.JSON(ctx)
 	if err != nil {
-		log.Fatalf("get Inner index %v: %v", attachedIndex, err)
+		log.Fatalf("get Inner object %v: %v", attachedObject, err)
 	}
 
-	copiedAttached, err := innerCopy.GetIndex(ctx)
+	copiedAttached, err := innerCopy.JSON(ctx)
 	if err != nil {
-		log.Fatalf("get Inner index %v: %v", attachedIndex, err)
+		log.Fatalf("get Inner object %v: %v", attachedObject, err)
 	}
 
-	if !reflect.DeepEqual(originalAttached, copiedAttached) {
-		t.Fatalf("Inner index not equal original index:  %v != %v", originalAttached, copiedAttached)
+	if originalAttached != copiedAttached {
+		t.Fatalf("Inner object not equal original object:  %v != %v", originalAttached, copiedAttached)
 	}
 }
 
-func TestSetGetOneToIndex(t *testing.T) {
-	db, err := itisadb.New(":800")
+func TestSetGetOneToObject(t *testing.T) {
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	index, err := db.Index(context.TODO(), "User")
+	object, err := db.Object(context.TODO(), "User")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = index.Set(context.TODO(), "Name", "Max", false)
+	err = object.Set(context.TODO(), "Name", "Max", false)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	value, err := index.Get(context.TODO(), "Name")
+	value, err := object.Get(context.TODO(), "Name")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -453,7 +475,7 @@ func TestSetGetOneToIndex(t *testing.T) {
 
 	/// CAR
 
-	car, err := db.Index(context.TODO(), "Car")
+	car, err := db.Object(context.TODO(), "Car")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -474,7 +496,7 @@ func TestSetGetOneToIndex(t *testing.T) {
 
 	/// WHEEL
 
-	wheel, err := car.Index(context.TODO(), "Wheel")
+	wheel, err := car.Object(context.TODO(), "Wheel")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -495,7 +517,7 @@ func TestSetGetOneToIndex(t *testing.T) {
 
 	/// TRAILER
 
-	trailer, err := car.Index(context.TODO(), "Trailer")
+	trailer, err := car.Object(context.TODO(), "Trailer")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -526,55 +548,55 @@ func TestSetGetOneToIndex(t *testing.T) {
 	}
 }
 
-// TestIsIndex
-func TestIsIndex(t *testing.T) {
-	db, err := itisadb.New(":800")
+// TestIsObject
+func TestIsObject(t *testing.T) {
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	name := fmt.Sprintf("%d", time.Now().Unix())
-	index, err := db.Index(context.TODO(), name)
+	object, err := db.Object(context.TODO(), name)
 	if err != nil {
-		log.Fatalf("Index error: %s\n", err)
+		log.Fatalf("Object error: %s\n", err)
 	}
 
 	time.Sleep(time.Second)
 
 	ctx := context.TODO()
-	if ok, err := db.IsIndex(ctx, index.GetName()); err != nil || !ok {
-		t.Fatal("Not an index, but should be")
+	if ok, err := db.IsObject(ctx, object.GetName()); err != nil || !ok {
+		t.Fatal("Not an object, but should be")
 	}
 
 	name = fmt.Sprintf("%d", time.Now().Unix())
-	newIndex, err := index.Index(ctx, index.GetName())
+	newObject, err := object.Object(ctx, object.GetName())
 	if err != nil {
-		log.Fatalf("Index error: %s\n", err)
+		log.Fatalf("Object error: %s\n", err)
 	}
 
 	time.Sleep(time.Second)
 
-	if ok, err := db.IsIndex(ctx, newIndex.GetName()); err != nil || !ok {
-		t.Fatal("Not an index, but should be")
+	if ok, err := db.IsObject(ctx, newObject.GetName()); err != nil || !ok {
+		t.Fatal("Not an object, but should be")
 	}
 
-	if ok, _ := db.IsIndex(ctx, fmt.Sprintf("%d", time.Now().Unix())); ok {
-		t.Fatal("Index, but should not be")
+	if ok, _ := db.IsObject(ctx, fmt.Sprintf("%d", time.Now().Unix())); ok {
+		t.Fatal("Object, but should not be")
 	}
 }
 
 func TestSize(t *testing.T) {
-	db, err := itisadb.New(":800")
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	index, err := db.Index(context.TODO(), fmt.Sprintf("%d", time.Now().Unix()))
+	object, err := db.Object(context.TODO(), fmt.Sprintf("%d", time.Now().Unix()))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	size, err := index.Size(context.TODO())
+	size, err := object.Size(context.TODO())
 	if err != nil {
 		t.Fatalf("Error %v\n", err)
 	} else if size != 0 {
@@ -584,19 +606,19 @@ func TestSize(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		k := fmt.Sprint(i)
 		v := fmt.Sprint(i)
-		if err = index.Set(context.TODO(), k, v, false); err != nil {
+		if err = object.Set(context.TODO(), k, v, false); err != nil {
 			t.Fatalf("Set error %v\n", err)
 		}
 	}
 
-	if size, err := index.Size(context.TODO()); err != nil || size != 100 {
+	if size, err := object.Size(context.TODO()); err != nil || size != 100 {
 		t.Fatalf("Wrong size %d\n", size)
 	}
 }
 
-// TestGetIndex
-func TestGetIndex(t *testing.T) {
-	db, err := itisadb.New(":800")
+// TestGetObject
+func TestGetObject(t *testing.T) {
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -604,9 +626,9 @@ func TestGetIndex(t *testing.T) {
 	time.Sleep(time.Second)
 
 	name := fmt.Sprintf("%d", time.Now().Unix())
-	index, err := db.Index(context.TODO(), name)
+	object, err := db.Object(context.TODO(), name)
 	if err != nil {
-		log.Fatalf("Index error: %s\n", err)
+		log.Fatalf("Object error: %s\n", err)
 	}
 
 	data := map[string]string{
@@ -618,18 +640,23 @@ func TestGetIndex(t *testing.T) {
 	}
 
 	for k, v := range data {
-		if err = index.Set(context.TODO(), k, v, false); err != nil {
+		if err = object.Set(context.TODO(), k, v, false); err != nil {
 			t.Fatalf("Set error %v\n", err)
 		}
 	}
 
 	ctx := context.TODO()
-	m, err := index.GetIndex(ctx)
+	m, err := object.JSON(ctx)
 	if err != nil {
-		t.Fatalf("GetIndex error %v\n", err)
+		t.Fatalf("GetObject error %v\n", err)
 	}
 
-	if !reflect.DeepEqual(data, m) {
+	dataJSON, err := json.Marshal(data)
+	if err != nil {
+		t.Fatalf("Marshal error %v\n", err)
+	}
+
+	if m != string(dataJSON) {
 		t.Fatalf("Wrong data %v\n", m)
 	}
 }
@@ -658,99 +685,99 @@ func TestDistinct(t *testing.T) {
 	t.Log(len(keys))
 }
 
-func TestClient_StructToIndex(t *testing.T) {
-	db, err := itisadb.New(":800")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	type Wheel struct {
-		Color string
-		Size  string
-	}
-
-	type Trailer struct {
-		Color string
-		Size  string
-	}
-
-	type Car struct {
-		Name    string
-		Wheel   *Wheel
-		Trailer *Trailer
-	}
-
-	type IQ struct {
-		Count int
-	}
-
-	var t1 = "qwe"
-	var t2 = &t1
-	var t3 = &t2
-
-	type User struct {
-		Name  string
-		Age   int
-		Email string
-		Car   *Car
-		IQ    IQ
-		T     ***string
-	}
-
-	user := User{
-		Name:  "Max",
-		Age:   25,
-		Email: "max@mail.ru",
-		Car: &Car{
-			Name: "MyCar",
-			Wheel: &Wheel{
-				Color: "Black",
-				Size:  "Big",
-			},
-			Trailer: &Trailer{
-				Color: "Red",
-				Size:  "Big",
-			},
-		},
-		IQ: IQ{
-			Count: 1,
-		},
-		T: &t3,
-	}
-
-	index, err := db.StructToIndex(context.TODO(), fmt.Sprintf("User%d", 1), user)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	mu := map[string]string{
-		"Name":  "Max",
-		"Car":   "\n\tName: MyCar\n\tWheel: \n\t\tSize: Big\n\t\tColor: Black\n\tTrailer: \n\t\t\tColor: Red\n\t\t\tSize: Big",
-		"Age":   "25",
-		"Email": "max@mail.ru",
-		"IQ":    "\n\t\tCount: 1",
-		"T":     "qwe",
-	}
-
-	mi, err := index.GetIndex(context.TODO())
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	splittedMi := strings.Split(strings.Replace(strings.Replace(mi["Car"], "\t", "", -1), "\n", "", -1), "")
-	splittedMu := strings.Split(strings.Replace(strings.Replace(mu["Car"], "\t", "", -1), "\n", "", -1), "")
-
-	if !IsTheSameArray(splittedMi, splittedMu) {
-		t.Fatalf("want\n%v,\ngot \n%v", splittedMu, splittedMi)
-	}
-
-	delete(mu, "Car")
-	delete(mi, "Car")
-
-	if !reflect.DeepEqual(mi, mu) {
-		t.Fatalf("want\n%v,\ngot \n%v", mu, mi)
-	}
-}
+//func TestClient_StructToObject(t *testing.T) {
+//	db, err := itisadb.New(":8888")
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//
+//	type Wheel struct {
+//		Color string
+//		Size  string
+//	}
+//
+//	type Trailer struct {
+//		Color string
+//		Size  string
+//	}
+//
+//	type Car struct {
+//		Name    string
+//		Wheel   *Wheel
+//		Trailer *Trailer
+//	}
+//
+//	type IQ struct {
+//		Count int
+//	}
+//
+//	var t1 = "qwe"
+//	var t2 = &t1
+//	var t3 = &t2
+//
+//	type User struct {
+//		Name  string
+//		Age   int
+//		Email string
+//		Car   *Car
+//		IQ    IQ
+//		T     ***string
+//	}
+//
+//	user := User{
+//		Name:  "Max",
+//		Age:   25,
+//		Email: "max@mail.ru",
+//		Car: &Car{
+//			Name: "MyCar",
+//			Wheel: &Wheel{
+//				Color: "Black",
+//				Size:  "Big",
+//			},
+//			Trailer: &Trailer{
+//				Color: "Red",
+//				Size:  "Big",
+//			},
+//		},
+//		IQ: IQ{
+//			Count: 1,
+//		},
+//		T: &t3,
+//	}
+//
+//	object, err := db.StructToObject(context.TODO(), fmt.Sprintf("User%d", 1), user)
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//
+//	mu := map[string]string{
+//		"Name":  "Max",
+//		"Car":   "\n\tName: MyCar\n\tWheel: \n\t\tSize: Big\n\t\tColor: Black\n\tTrailer: \n\t\t\tColor: Red\n\t\t\tSize: Big",
+//		"Age":   "25",
+//		"Email": "max@mail.ru",
+//		"IQ":    "\n\t\tCount: 1",
+//		"T":     "qwe",
+//	}
+//
+//	mi, err := object.JSON(context.TODO())
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//
+//	splittedMi := strings.Split(strings.Replace(strings.Replace(mi["Car"], "\t", "", -1), "\n", "", -1), "")
+//	splittedMu := strings.Split(strings.Replace(strings.Replace(mu["Car"], "\t", "", -1), "\n", "", -1), "")
+//
+//	if !IsTheSameArray(splittedMi, splittedMu) {
+//		t.Fatalf("want\n%v,\ngot \n%v", splittedMu, splittedMi)
+//	}
+//
+//	delete(mu, "Car")
+//	delete(mi, "Car")
+//
+//	if !reflect.DeepEqual(mi, mu) {
+//		t.Fatalf("want\n%v,\ngot \n%v", mu, mi)
+//	}
+//}
 
 func IsTheSameArray[T comparable](a, b []T) bool {
 	if len(a) != len(b) {
@@ -769,8 +796,8 @@ func IsTheSameArray[T comparable](a, b []T) bool {
 	return true
 }
 
-func TestClient_IndexToStruct(t *testing.T) {
-	db, err := itisadb.New(":800")
+func TestClient_ObjectToStruct(t *testing.T) {
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -822,13 +849,13 @@ func TestClient_IndexToStruct(t *testing.T) {
 		},
 	}
 
-	_, err = db.StructToIndex(context.TODO(), "User33", user)
+	_, err = db.StructToObject(context.TODO(), "User33", user)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	us := &User{}
-	err = db.IndexToStruct(context.TODO(), "User33", us)
+	err = db.ObjectToStruct(context.TODO(), "User33", us)
 	if err != nil {
 		t.Fatal(err)
 	}

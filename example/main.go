@@ -6,9 +6,9 @@ import (
 	"log"
 )
 
-// main to run this test, itisadb must be run on :800.
+// main to run this test, itisadb must be run on :8888.
 func main() {
-	db, err := itisadb.New(":800")
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		return
 	}

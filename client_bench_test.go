@@ -101,14 +101,14 @@ func BenchmarkGetOneRPS(b *testing.B) {
 }
 
 // Test to define rps for Get.
-func BenchmarkGetFromDiskIndexRPS(b *testing.B) {
+func BenchmarkGetFromDiskObjectRPS(b *testing.B) {
 	db, err := itisadb.New(":800")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	ctx := context.Background()
-	ind, err := db.Index(ctx, "User1")
+	ind, err := db.Object(ctx, "User1")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -126,7 +126,7 @@ func BenchmarkGetFromDiskIndexRPS(b *testing.B) {
 }
 
 // Test to define rps for Get.
-func BenchmarkGetFromDiskIndexRPS2(b *testing.B) {
+func BenchmarkGetFromDiskObjectRPS2(b *testing.B) {
 	db, err := itisadb.New(":800")
 	if err != nil {
 		log.Fatalln(err)
@@ -156,7 +156,7 @@ func BenchmarkGetFromDiskIndexRPS2(b *testing.B) {
 			wg.Done()
 			go func(i int) {
 				wg.Wait()
-				ind, err := db.Index(ctx, ints[i])
+				ind, err := db.Object(ctx, ints[i])
 				if err != nil {
 					log.Println(err, "["+ints[i]+"]")
 				}
