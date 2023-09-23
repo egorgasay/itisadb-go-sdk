@@ -12,22 +12,22 @@ import (
 
 // Test to define rps for SetOne.
 func BenchmarkSetOneRPS(b *testing.B) {
-	db, err := itisadb.New(":800")
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		log.Fatalln(err)
 	}
 	const gnum = 1500000
-	const maxRPS = 25000
+	const maxRPS = 10000
 
-	log.Println("Total actions:", gnum)
-	log.Println("RPS:", maxRPS)
+	b.Log("Total actions:", gnum)
+	b.Log("RPS:", maxRPS)
 
 	var ints = make([]string, maxRPS)
 	for i := 0; i < maxRPS; i++ {
 		ints[i] = fmt.Sprint(i)
 	}
 
-	log.Println("Hops:", gnum/maxRPS)
+	b.Log("Hops:", gnum/maxRPS)
 
 	var total time.Duration
 	for tt := gnum / maxRPS; tt > 0; tt-- {
@@ -41,10 +41,12 @@ func BenchmarkSetOneRPS(b *testing.B) {
 			wg.Done()
 			go func(i int) {
 				wg.Wait()
-				db.SetOne(ctx, ints[i], "qdw", false)
+				err := db.SetOne(ctx, ints[i], "qdw", false)
+				if err != nil {
+					b.Log(err)
+				}
 				wgSent.Done()
 			}(i)
-
 		}
 		wg.Wait()
 		start := time.Now()
@@ -57,22 +59,22 @@ func BenchmarkSetOneRPS(b *testing.B) {
 
 // Test to define rps for Get.
 func BenchmarkGetOneRPS(b *testing.B) {
-	db, err := itisadb.New(":800")
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		log.Fatalln(err)
 	}
 	const gnum = 1500000
-	const maxRPS = 20000
+	const maxRPS = 10000
 
-	log.Println("Total actions:", gnum)
-	log.Println("RPS:", maxRPS)
+	b.Log("Total actions:", gnum)
+	b.Log("RPS:", maxRPS)
 
 	var ints = make([]string, maxRPS)
 	for i := 0; i < maxRPS; i++ {
 		ints[i] = fmt.Sprint(i)
 	}
 
-	log.Println("Hops:", gnum/maxRPS)
+	b.Log("Hops:", gnum/maxRPS)
 
 	var total time.Duration
 	for tt := gnum / maxRPS; tt > 0; tt-- {
@@ -83,13 +85,15 @@ func BenchmarkGetOneRPS(b *testing.B) {
 		wgSent.Add(maxRPS)
 		ctx := context.TODO()
 		for i := 0; i < maxRPS; i++ {
-			wg.Done()
 			go func(i int) {
 				wg.Wait()
-				db.Get(ctx, ints[i])
+				_, err := db.Get(ctx, ints[i])
+				if err != nil {
+					b.Log(err)
+				}
 				wgSent.Done()
 			}(i)
-
+			wg.Done()
 		}
 		wg.Wait()
 		start := time.Now()
@@ -127,22 +131,22 @@ func BenchmarkGetFromDiskObjectRPS(b *testing.B) {
 
 // Test to define rps for Get.
 func BenchmarkGetFromDiskObjectRPS2(b *testing.B) {
-	db, err := itisadb.New(":800")
+	db, err := itisadb.New(":8888")
 	if err != nil {
 		log.Fatalln(err)
 	}
 	const gnum = 1500000
 	const maxRPS = 10000
 
-	log.Println("Total actions:", gnum)
-	log.Println("RPS:", maxRPS)
+	b.Log("Total actions:", gnum)
+	b.Log("RPS:", maxRPS)
 
 	var ints = make([]string, maxRPS)
 	for i := 0; i < maxRPS; i++ {
 		ints[i] = "User" + fmt.Sprint(i)
 	}
 
-	log.Println("Hops:", gnum/maxRPS)
+	b.Log("Hops:", gnum/maxRPS)
 
 	var total time.Duration
 	for tt := gnum / maxRPS; tt > 0; tt-- {
@@ -158,12 +162,14 @@ func BenchmarkGetFromDiskObjectRPS2(b *testing.B) {
 				wg.Wait()
 				ind, err := db.Object(ctx, ints[i])
 				if err != nil {
-					log.Println(err, "["+ints[i]+"]")
+					b.Log(err, "["+ints[i]+"]")
+					return
 				}
 
 				_, err = ind.Get(ctx, "Email")
 				if err != nil {
-					log.Println(err)
+					b.Log(err)
+					return
 				}
 				wgSent.Done()
 			}(i)
