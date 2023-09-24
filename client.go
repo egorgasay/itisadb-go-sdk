@@ -3,8 +3,8 @@ package itisadb
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
-	gcredentials "google.golang.org/grpc/credentials"
 	"sync"
 
 	"google.golang.org/grpc"
@@ -14,6 +14,8 @@ import (
 type Client struct {
 	keysAndServers map[string]int32
 	mu             sync.RWMutex
+
+	token string
 
 	cl balancer.BalancerClient
 }
@@ -34,25 +36,51 @@ type Key struct {
 
 var ErrUnavailable = errors.New("storage is unavailable")
 
-func New(balancerIP string, credentials ...gcredentials.TransportCredentials) (*Client, error) {
+type Credentials struct {
+	Login    string
+	Password string
+}
+
+type Config struct {
+	Credentials Credentials
+}
+
+var defaultConfig = Config{
+	Credentials: Credentials{
+		Login:    "itisadb",
+		Password: "itisadb",
+	},
+}
+
+func New(ctx context.Context, balancerIP string, conf ...Config) (*Client, error) {
 	var conn *grpc.ClientConn
 	var err error
 
-	if credentials == nil || len(credentials) == 0 {
-		conn, err = grpc.Dial(balancerIP, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	} else {
-		conn, err = grpc.Dial(balancerIP, grpc.WithTransportCredentials(credentials[0]))
+	config := defaultConfig
+	if len(conf) > 1 {
+		config = conf[0]
 	}
 
+	conn, err = grpc.Dial(balancerIP, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}
 
 	client := balancer.NewBalancerClient(conn)
 
+	resp, err := client.Authenticate(ctx, &balancer.BalancerAuthRequest{
+		Login:    config.Credentials.Login,
+		Password: config.Credentials.Password,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to authenticate: %w", err)
+	}
+
 	return &Client{
 		keysAndServers: make(map[string]int32, 100),
 		cl:             client,
+		token:          resp.Token,
 	}, nil
 }
 

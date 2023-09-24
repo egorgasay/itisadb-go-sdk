@@ -12,12 +12,12 @@ import (
 
 // Test to define rps for SetOne.
 func BenchmarkSetOneRPS(b *testing.B) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		log.Fatalln(err)
 	}
-	const gnum = 1500000
 	const maxRPS = 10000
+	const gnum = maxRPS * 10
 
 	b.Log("Total actions:", gnum)
 	b.Log("RPS:", maxRPS)
@@ -59,7 +59,7 @@ func BenchmarkSetOneRPS(b *testing.B) {
 
 // Test to define rps for Get.
 func BenchmarkGetOneRPS(b *testing.B) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -106,7 +106,7 @@ func BenchmarkGetOneRPS(b *testing.B) {
 
 // Test to define rps for Get.
 func BenchmarkGetFromDiskObjectRPS(b *testing.B) {
-	db, err := itisadb.New(":800")
+	db, err := itisadb.New(_ctx, ":800")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -131,7 +131,7 @@ func BenchmarkGetFromDiskObjectRPS(b *testing.B) {
 
 // Test to define rps for Get.
 func BenchmarkGetFromDiskObjectRPS2(b *testing.B) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		log.Fatalln(err)
 	}

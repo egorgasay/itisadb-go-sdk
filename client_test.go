@@ -18,9 +18,11 @@ import (
 	"modernc.org/strutil"
 )
 
+var _ctx = context.TODO()
+
 // TestSetGetOne to run this test, itisadb must be run on :8888.
 func TestSetGetOne(t *testing.T) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		return
 	}
@@ -43,7 +45,7 @@ func TestSetGetOne(t *testing.T) {
 
 // TestSetToGetFrom to run this test, itisadb must be run on :8888.
 func TestSetToGetFrom(t *testing.T) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		return
 	}
@@ -67,7 +69,7 @@ func TestSetToGetFrom(t *testing.T) {
 // TestSetToAllGet to run this test, itisadb must be run on :8888.
 // TODO: Add edge cases.
 func TestSetToAllGet(t *testing.T) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		return
 	}
@@ -91,7 +93,7 @@ func TestSetToAllGet(t *testing.T) {
 // TestSetManyGetMany to run this test, itisadb must be run on :8888.
 // TODO: Add edge cases.
 func TestSetManyGetMany(t *testing.T) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		return
 	}
@@ -133,7 +135,7 @@ func TestSetManyGetMany(t *testing.T) {
 // TestSetManyOptsGetManyOpts to run this test, itisadb must be run on :8888.
 // TODO: Add edge cases.
 func TestSetManyOptsGetManyOpts(t *testing.T) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		return
 	}
@@ -188,7 +190,7 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -213,7 +215,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestDeleteObject(t *testing.T) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -287,7 +289,7 @@ func TestDeleteObject(t *testing.T) {
 }
 
 func TestDeleteAttr(t *testing.T) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -369,7 +371,7 @@ func TestDeleteAttr(t *testing.T) {
 }
 
 func TestAttachObject(t *testing.T) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -448,8 +450,8 @@ func TestAttachObject(t *testing.T) {
 	}
 }
 
-func TestSetGetOneToObject(t *testing.T) {
-	db, err := itisadb.New(":8888")
+func TestSetGetOneFromObject(t *testing.T) {
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -550,7 +552,7 @@ func TestSetGetOneToObject(t *testing.T) {
 
 // TestIsObject
 func TestIsObject(t *testing.T) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -586,7 +588,7 @@ func TestIsObject(t *testing.T) {
 }
 
 func TestSize(t *testing.T) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -618,7 +620,7 @@ func TestSize(t *testing.T) {
 
 // TestGetObject
 func TestGetObject(t *testing.T) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -686,7 +688,7 @@ func TestDistinct(t *testing.T) {
 }
 
 //func TestClient_StructToObject(t *testing.T) {
-//	db, err := itisadb.New(":8888")
+//	db, err := itisadb.New(_ctx,":8888")
 //	if err != nil {
 //		t.Fatal(err)
 //	}
@@ -797,7 +799,7 @@ func IsTheSameArray[T comparable](a, b []T) bool {
 }
 
 func TestClient_ObjectToStruct(t *testing.T) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -892,7 +894,7 @@ func cmpReflect(a, b reflect.Value) bool {
 }
 
 func TestClient_GetCmp(t *testing.T) {
-	db, err := itisadb.New(":8888")
+	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -916,7 +918,7 @@ func TestClient_GetCmp(t *testing.T) {
 		return
 	}
 
-	iint, err := itisadb.GetCmp[int64](ctx, db, "qwe")
+	iint, err := itisadb.GetCmp[int](ctx, db, "qwe")
 	if err != nil {
 		t.Errorf("GetCmp() error = %v, wantErr no", err)
 		return
