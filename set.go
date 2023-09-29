@@ -16,7 +16,7 @@ const (
 var ErrUniqueConstraint = errors.New("unique constraint failed")
 
 func (c *Client) set(ctx context.Context, key, value string, server int32, uniques bool) (int32, error) {
-	res, err := c.cl.Set(ctx, &balancer.BalancerSetRequest{
+	res, err := c.cl.Set(withAuth(ctx), &balancer.BalancerSetRequest{
 		Key:     key,
 		Value:   value,
 		Server:  server,

@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -22,20 +20,7 @@ func (c *Client) get(ctx context.Context, key string, server int32) (string, err
 	})
 
 	if err != nil {
-		st, ok := status.FromError(err)
-		if !ok {
-			return "", err
-		}
-
-		if st.Code() == codes.NotFound {
-			return "", ErrNotFound
-		}
-
-		if st.Code() == codes.Unavailable {
-			return "", ErrUnavailable
-		}
-
-		return "", err
+		return "", convertGRPCError(err)
 	}
 
 	return res.Value, nil

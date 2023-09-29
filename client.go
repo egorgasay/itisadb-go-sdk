@@ -88,7 +88,7 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (*Client, error
 
 // Object creates a new object.
 func (c *Client) Object(ctx context.Context, name string) (*Object, error) {
-	_, err := c.cl.Object(ctx, &balancer.BalancerObjectRequest{
+	_, err := c.cl.Object(withAuth(ctx), &balancer.BalancerObjectRequest{
 		Name: name,
 	})
 
@@ -104,7 +104,7 @@ func (c *Client) Object(ctx context.Context, name string) (*Object, error) {
 
 // IsObject checks if it is an object or not.
 func (c *Client) IsObject(ctx context.Context, name string) (bool, error) {
-	r, err := c.cl.IsObject(ctx, &balancer.BalancerIsObjectRequest{
+	r, err := c.cl.IsObject(withAuth(ctx), &balancer.BalancerIsObjectRequest{
 		Name: name,
 	})
 
