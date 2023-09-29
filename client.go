@@ -77,6 +77,8 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (*Client, error
 		return nil, fmt.Errorf("failed to authenticate: %w", err)
 	}
 
+	authMetadata.Set(token, resp.Token)
+
 	return &Client{
 		keysAndServers: make(map[string]int32, 100),
 		cl:             client,
@@ -91,7 +93,7 @@ func (c *Client) Object(ctx context.Context, name string) (*Object, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, convertGRPCError(err)
 	}
 
 	return &Object{
@@ -107,7 +109,7 @@ func (c *Client) IsObject(ctx context.Context, name string) (bool, error) {
 	})
 
 	if err != nil {
-		return false, err
+		return false, convertGRPCError(err)
 	}
 
 	return r.Ok, nil

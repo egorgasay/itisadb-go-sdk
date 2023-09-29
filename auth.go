@@ -2,12 +2,16 @@ package itisadb
 
 import (
 	"context"
+	"errors"
 	"google.golang.org/grpc/metadata"
 )
 
 const token = "token"
 
-func (c *Client) withAuth(ctx context.Context) context.Context {
-	md := metadata.New(map[string]string{token: c.token})
-	return metadata.NewOutgoingContext(ctx, md)
+var authMetadata = metadata.New(map[string]string{token: ""})
+
+var ErrUnauthorized = errors.New("unauthorized")
+
+func withAuth(ctx context.Context) context.Context {
+	return metadata.NewOutgoingContext(ctx, authMetadata)
 }
