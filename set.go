@@ -3,7 +3,7 @@ package itisadb
 import (
 	"context"
 	"errors"
-	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
+	"github.com/egorgasay/itisadb-go-sdk/api"
 )
 
 const (
@@ -16,10 +16,10 @@ const (
 var ErrUniqueConstraint = errors.New("unique constraint failed")
 
 func (c *Client) set(ctx context.Context, key, value string, server int32, uniques bool) (int32, error) {
-	res, err := c.cl.Set(withAuth(ctx), &balancer.BalancerSetRequest{
+	res, err := c.cl.Set(withAuth(ctx), &api.SetRequest{
 		Key:     key,
 		Value:   value,
-		Server:  server,
+		Server:  &server,
 		Uniques: uniques,
 	})
 

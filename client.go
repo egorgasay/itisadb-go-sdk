@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
+	"github.com/egorgasay/itisadb-go-sdk/api"
 	"sync"
 
 	"google.golang.org/grpc"
@@ -17,7 +17,7 @@ type Client struct {
 
 	token string
 
-	cl balancer.BalancerClient
+	cl api.ItisaDBClient
 }
 
 type Opts struct {
@@ -66,9 +66,9 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (*Client, error
 		return nil, err
 	}
 
-	client := balancer.NewBalancerClient(conn)
+	client := api.NewItisaDBClient(conn)
 
-	resp, err := client.Authenticate(ctx, &balancer.BalancerAuthRequest{
+	resp, err := client.Authenticate(ctx, &api.AuthRequest{
 		Login:    config.Credentials.Login,
 		Password: config.Credentials.Password,
 	})
@@ -88,7 +88,7 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (*Client, error
 
 // Object creates a new object.
 func (c *Client) Object(ctx context.Context, name string) (*Object, error) {
-	_, err := c.cl.Object(withAuth(ctx), &balancer.BalancerObjectRequest{
+	_, err := c.cl.Object(withAuth(ctx), &api.ObjectRequest{
 		Name: name,
 	})
 
@@ -104,7 +104,7 @@ func (c *Client) Object(ctx context.Context, name string) (*Object, error) {
 
 // IsObject checks if it is an object or not.
 func (c *Client) IsObject(ctx context.Context, name string) (bool, error) {
-	r, err := c.cl.IsObject(withAuth(ctx), &balancer.BalancerIsObjectRequest{
+	r, err := c.cl.IsObject(withAuth(ctx), &api.IsObjectRequest{
 		Name: name,
 	})
 

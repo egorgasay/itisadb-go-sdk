@@ -1,7 +1,7 @@
 package itisadb
 
 import (
-	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
+	"github.com/egorgasay/itisadb-go-sdk/api"
 	"golang.org/x/net/context"
 )
 
@@ -9,9 +9,9 @@ func (c *Client) del(ctx context.Context, key string, server int32) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
-	_, err := c.cl.Delete(withAuth(ctx), &balancer.BalancerDeleteRequest{
+	_, err := c.cl.Delete(withAuth(ctx), &api.DeleteRequest{
 		Key:    key,
-		Server: server,
+		Server: &server,
 	})
 	if err != nil {
 		return convertGRPCError(err)

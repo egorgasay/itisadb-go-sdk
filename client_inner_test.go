@@ -2,7 +2,7 @@ package itisadb
 
 import (
 	"context"
-	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
+	"github.com/egorgasay/itisadb-go-sdk/api"
 	"testing"
 )
 
@@ -14,7 +14,7 @@ func TestAuth(t *testing.T) {
 	}
 
 	// method that requires auth
-	resp, err := cl.cl.Servers(cl.withAuth(ctx), &balancer.BalancerServersRequest{})
+	resp, err := cl.cl.Servers(withAuth(ctx), &api.ServersRequest{})
 	if err != nil {
 		t.Fatalf("Servers: %v", err)
 	}

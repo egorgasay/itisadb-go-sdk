@@ -3,7 +3,7 @@ package itisadb
 import (
 	"context"
 	"errors"
-	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
+	"github.com/egorgasay/itisadb-go-sdk/api"
 )
 
 const (
@@ -14,9 +14,9 @@ const (
 var ErrNotFound = errors.New("not found")
 
 func (c *Client) get(ctx context.Context, key string, server int32) (string, error) {
-	res, err := c.cl.Get(withAuth(ctx), &balancer.BalancerGetRequest{
+	res, err := c.cl.Get(withAuth(ctx), &api.GetRequest{
 		Key:    key,
-		Server: server,
+		Server: &server,
 	})
 
 	if err != nil {

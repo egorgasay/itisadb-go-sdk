@@ -4,19 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
+	"github.com/egorgasay/itisadb-go-sdk/api"
 )
 
 type Object struct {
 	name string
-	cl   balancer.BalancerClient
+	cl   api.ItisaDBClient
 }
 
 var ErrObjectNotFound = errors.New("object not found")
 
 // Set sets the value for the key in the specified object.
 func (i *Object) Set(ctx context.Context, key, value string, uniques bool) error {
-	_, err := i.cl.SetToObject(withAuth(ctx), &balancer.BalancerSetToObjectRequest{
+	_, err := i.cl.SetToObject(withAuth(ctx), &api.SetToObjectRequest{
 		Key:     key,
 		Value:   value,
 		Object:  i.name,
@@ -32,7 +32,7 @@ func (i *Object) Set(ctx context.Context, key, value string, uniques bool) error
 
 // Get gets the value for the key from the specified object.
 func (i *Object) Get(ctx context.Context, key string) (string, error) {
-	res, err := i.cl.GetFromObject(withAuth(ctx), &balancer.BalancerGetFromObjectRequest{
+	res, err := i.cl.GetFromObject(withAuth(ctx), &api.GetFromObjectRequest{
 		Key:    key,
 		Object: i.name,
 	})
@@ -45,7 +45,7 @@ func (i *Object) Get(ctx context.Context, key string) (string, error) {
 // Object returns a new or an existing object.
 func (i *Object) Object(ctx context.Context, name string) (*Object, error) {
 	name = fmt.Sprint(i.name, ".", name)
-	_, err := i.cl.Object(withAuth(ctx), &balancer.BalancerObjectRequest{
+	_, err := i.cl.Object(withAuth(ctx), &api.ObjectRequest{
 		Name: name,
 	})
 
@@ -66,7 +66,7 @@ func (i *Object) GetName() string {
 
 // JSON returns the object in JSON.
 func (i *Object) JSON(ctx context.Context) (string, error) {
-	r, err := i.cl.ObjectToJSON(withAuth(ctx), &balancer.BalancerObjectToJSONRequest{
+	r, err := i.cl.ObjectToJSON(withAuth(ctx), &api.ObjectToJSONRequest{
 		Name: i.name,
 	})
 
@@ -79,7 +79,7 @@ func (i *Object) JSON(ctx context.Context) (string, error) {
 
 // Size returns  the size of the object.
 func (i *Object) Size(ctx context.Context) (uint64, error) {
-	r, err := i.cl.Size(withAuth(ctx), &balancer.BalancerObjectSizeRequest{
+	r, err := i.cl.Size(withAuth(ctx), &api.ObjectSizeRequest{
 		Name: i.name,
 	})
 
@@ -92,7 +92,7 @@ func (i *Object) Size(ctx context.Context) (uint64, error) {
 
 // DeleteObject deletes the object.
 func (i *Object) DeleteObject(ctx context.Context) error {
-	_, err := i.cl.DeleteObject(withAuth(ctx), &balancer.BalancerDeleteObjectRequest{
+	_, err := i.cl.DeleteObject(withAuth(ctx), &api.DeleteObjectRequest{
 		Object: i.name,
 	})
 
@@ -105,7 +105,7 @@ func (i *Object) DeleteObject(ctx context.Context) error {
 
 // Attach attaches the object to another object.
 func (i *Object) Attach(ctx context.Context, name string) error {
-	_, err := i.cl.AttachToObject(withAuth(ctx), &balancer.BalancerAttachToObjectRequest{
+	_, err := i.cl.AttachToObject(withAuth(ctx), &api.AttachToObjectRequest{
 		Dst: i.name,
 		Src: name,
 	})
@@ -117,7 +117,7 @@ func (i *Object) Attach(ctx context.Context, name string) error {
 
 // DeleteAttr deletes the attribute from the object.
 func (i *Object) DeleteAttr(ctx context.Context, key string) error {
-	_, err := i.cl.DeleteAttr(withAuth(ctx), &balancer.BalancerDeleteAttrRequest{
+	_, err := i.cl.DeleteAttr(withAuth(ctx), &api.DeleteAttrRequest{
 		Object: i.name,
 		Key:    key,
 	})
