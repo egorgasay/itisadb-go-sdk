@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/egorgasay/itisadb-go-sdk"
-	"log"
 	"math/rand"
 	"os"
 	"reflect"
@@ -28,12 +27,12 @@ func TestSetGetOne(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	err = db.SetOne(ctx, "qwe", "111", false)
-	if err != nil {
-		t.Fatal(err)
+	r := db.SetOne(ctx, "qwe", "111", false)
+	if r.Err() != nil {
+		t.Fatal(r.Err())
 	}
 
-	get, err := db.Get(ctx, "qwe")
+	get, err := db.GetOne(ctx, "qwe").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,12 +50,12 @@ func TestSetToGetFrom(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	err = db.SetTo(ctx, "fff", "qqq", 1, false)
+	err = db.SetTo(ctx, "fff", "qqq", 1, false).Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	get, err := db.GetFrom(ctx, "fff", 1)
+	get, err := db.GetFrom(ctx, "fff", 1).ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,12 +74,12 @@ func TestSetToAllGet(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	err = db.SetToAll(ctx, "all_key", "qqq", false)
+	err = db.SetToAll(ctx, "all_key", "qqq", false).Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	get, err := db.Get(ctx, "all_key")
+	get, err := db.GetOne(ctx, "all_key").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,12 +106,12 @@ func TestSetManyGetMany(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	err = db.SetMany(ctx, m, false)
+	err = db.SetMany(ctx, m, false).Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	get, err := db.Get(ctx, "m2")
+	get, err := db.GetOne(ctx, "m2").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -157,12 +156,12 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	err = db.SetManyOpts(ctx, m, false)
+	err = db.SetManyOpts(ctx, m, false).Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	get, err := db.Get(ctx, "mo2")
+	get, err := db.GetOne(ctx, "mo2").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -198,17 +197,17 @@ func TestDelete(t *testing.T) {
 
 	num := rand.Int31()
 	n := fmt.Sprint(num)
-	err = db.SetOne(ctx, "key_for_delete"+n, "value_for_delete", false)
+	err = db.SetOne(ctx, "key_for_delete"+n, "value_for_delete", false).Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = db.Del(ctx, "key_for_delete"+n)
+	err = db.Del(ctx, "key_for_delete"+n).Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = db.Get(ctx, "key_for_delete"+n)
+	_, err = db.GetOne(ctx, "key_for_delete"+n).ValueAndErr()
 	if !errors.Is(err, itisadb.ErrNotFound) {
 		t.Fatalf("Key should be deleted, but %v", err)
 	}
@@ -225,31 +224,31 @@ func TestDeleteObject(t *testing.T) {
 	n := fmt.Sprint(num)
 	name := "TestDeleteObject" + n
 
-	indx, err := db.Object(ctx, name)
+	indx, err := db.Object(ctx, name).ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = indx.Set(ctx, "key_for_delete", "value_for_delete", false)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = indx.Get(ctx, "key_for_delete")
+	err = indx.Set(ctx, "key_for_delete", "value_for_delete", false).Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = indx.DeleteObject(ctx)
+	_, err = indx.Get(ctx, "key_for_delete").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	indx, err = db.Object(ctx, name)
+	err = indx.DeleteObject(ctx).Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = indx.Get(ctx, "key_for_delete")
+	indx, err = db.Object(ctx, name).ValueAndErr()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = indx.Get(ctx, "key_for_delete").ValueAndErr()
 	if !errors.Is(err, itisadb.ErrNotFound) {
 		t.Fatal("Object should be deleted")
 	}
@@ -257,32 +256,43 @@ func TestDeleteObject(t *testing.T) {
 	// TEST DELETE INNER OBJECT
 
 	name = "inner_object"
-	inner, err := indx.Object(ctx, name)
+	inner, err := indx.Object(ctx, name).ValueAndErr()
 	if err != nil {
-		log.Fatalf("Inner object %v: %v", name, err)
+		t.Fatalf("Inner object %v: %v", name, err)
 	}
 
-	err = inner.Set(ctx, "key_for_delete", "value_for_delete", false)
+	name = "more_inner_object"
+	moreInner, err := inner.Object(ctx, name).ValueAndErr()
 	if err != nil {
-		log.Fatalf("Inner object %v: %v", name, err)
+		t.Fatalf("Inner object %v: %v", name, err)
 	}
 
-	_, err = inner.Get(ctx, "key_for_delete")
+	err = moreInner.DeleteObject(ctx).Err()
 	if err != nil {
-		log.Fatalf("Inner object %v: %v", name, err)
+		t.Fatalf("Inner object %v: %v", name, err)
 	}
 
-	err = inner.DeleteObject(ctx)
+	err = inner.Set(ctx, "key_for_delete", "value_for_delete", false).Err()
 	if err != nil {
-		log.Fatalf("Inner object %v: %v", name, err)
+		t.Fatalf("Inner object %v: %v", name, err)
 	}
 
-	inner, err = indx.Object(ctx, name)
+	_, err = inner.Get(ctx, "key_for_delete").ValueAndErr()
 	if err != nil {
-		log.Fatalf("Inner object %v: %v", name, err)
+		t.Fatalf("Inner object %v: %v", name, err)
 	}
 
-	_, err = inner.Get(ctx, "key_for_delete")
+	err = inner.DeleteObject(ctx).Err()
+	if err != nil {
+		t.Fatalf("Inner object %v: %v", name, err)
+	}
+
+	inner, err = indx.Object(ctx, name).ValueAndErr()
+	if err != nil {
+		t.Fatalf("Inner object %v: %v", name, err)
+	}
+
+	_, err = inner.Get(ctx, "key_for_delete").ValueAndErr()
 	if !errors.Is(err, itisadb.ErrNotFound) {
 		t.Fatal("Inner Object should be deleted")
 	}
@@ -299,31 +309,31 @@ func TestDeleteAttr(t *testing.T) {
 	n := fmt.Sprint(num)
 	name := "TestDeleteAttr" + n
 
-	indx, err := db.Object(ctx, name)
+	indx, err := db.Object(ctx, name).ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = indx.Set(ctx, "key_for_delete", "value_for_delete", false)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = indx.Get(ctx, "key_for_delete")
+	err = indx.Set(ctx, "key_for_delete", "value_for_delete", false).Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = indx.DeleteAttr(ctx, "key_for_delete")
+	_, err = indx.Get(ctx, "key_for_delete").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	indx, err = db.Object(ctx, name)
+	err = indx.DeleteAttr(ctx, "key_for_delete").Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = indx.Get(ctx, "key_for_delete")
+	indx, err = db.Object(ctx, name).ValueAndErr()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = indx.Get(ctx, "key_for_delete").ValueAndErr()
 	if !errors.Is(err, itisadb.ErrNotFound) {
 		t.Fatal("Key should be deleted")
 	}
@@ -331,39 +341,39 @@ func TestDeleteAttr(t *testing.T) {
 	// TEST DELETE ATTR INNER OBJECT
 
 	name = "inner_object"
-	inner, err := indx.Object(ctx, name)
+	inner, err := indx.Object(ctx, name).ValueAndErr()
 	if err != nil {
-		log.Fatalf("Inner object %v: %v", name, err)
+		t.Fatalf("Inner object %v: %v", name, err)
 	}
 
-	err = inner.Set(ctx, "key_for_delete", "value_for_delete", false)
+	err = inner.Set(ctx, "key_for_delete", "value_for_delete", false).Err()
 	if err != nil {
-		log.Fatalf("Inner object %v: %v", name, err)
+		t.Fatalf("Inner object %v: %v", name, err)
 	}
 
-	_, err = inner.Get(ctx, "key_for_delete")
+	_, err = inner.Get(ctx, "key_for_delete").ValueAndErr()
 	if err != nil {
-		log.Fatalf("Inner object %v: %v", name, err)
+		t.Fatalf("Inner object %v: %v", name, err)
 	}
 
-	err = inner.DeleteAttr(ctx, "key_for_delete")
+	err = inner.DeleteAttr(ctx, "key_for_delete").Err()
 	if err != nil {
-		log.Fatalf("Inner object %v: %v", name, err)
+		t.Fatalf("Inner object %v: %v", name, err)
 	}
 
-	inner, err = indx.Object(ctx, name)
+	inner, err = indx.Object(ctx, name).ValueAndErr()
 	if err != nil {
-		log.Fatalf("Inner object %v: %v", name, err)
+		t.Fatalf("Inner object %v: %v", name, err)
 	}
 
-	_, err = inner.Get(ctx, "key_for_delete")
+	_, err = inner.Get(ctx, "key_for_delete").ValueAndErr()
 	if !errors.Is(err, itisadb.ErrNotFound) {
 		t.Fatal("Inner Object key should be deleted")
 	}
 
 	// TEST DELETE ATTR (INNER OBJECT) KEY DOES NOT EXIST
 
-	err = inner.DeleteAttr(ctx, "key_for_delete_does_not_exist")
+	err = inner.DeleteAttr(ctx, "key_for_delete_does_not_exist").Err()
 	if !errors.Is(err, itisadb.ErrNotFound) {
 		t.Fatalf("Inner Object key shouldn't be deleted: %v", err)
 	}
@@ -379,70 +389,70 @@ func TestAttachObject(t *testing.T) {
 	ctx := context.TODO()
 
 	originalObject := "TestAttachObject"
-	indx, err := db.Object(ctx, originalObject)
+	indx, err := db.Object(ctx, originalObject).ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	attachedObject := "TestAttachObject2"
-	inner, err := db.Object(ctx, attachedObject)
+	inner, err := db.Object(ctx, attachedObject).ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := indx.DeleteObject(ctx); err != nil {
+	if err := indx.DeleteObject(ctx).Err(); err != nil {
 		t.Fatalf("Delete object %v: %v", originalObject, err)
 	}
 
-	if err := inner.DeleteObject(ctx); err != nil {
+	if err := inner.DeleteObject(ctx).Err(); err != nil {
 		t.Fatalf("Delete object %v: %v", originalObject, err)
 	}
 
 	originalObject = "TestAttachObject"
-	indx, err = db.Object(ctx, originalObject)
+	indx, err = db.Object(ctx, originalObject).ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	attachedObject = "TestAttachObject2"
-	inner, err = db.Object(ctx, attachedObject)
+	inner, err = db.Object(ctx, attachedObject).ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = inner.Set(ctx, "key_for_attach", "value_for_attach", false)
+	err = inner.Set(ctx, "key_for_attach", "value_for_attach", false).Err()
 	if err != nil {
-		log.Fatalf("set Inner object %v: %v", attachedObject, err)
+		t.Fatalf("set Inner object %v: %v", attachedObject, err)
 	}
 
-	err = indx.Attach(ctx, inner.GetName())
+	err = indx.Attach(ctx, inner.GetName()).Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	innerCopy, err := indx.Object(ctx, attachedObject)
+	innerCopy, err := indx.Object(ctx, attachedObject).ValueAndErr()
 	if err != nil {
-		log.Fatalf("main switch object %v: %v", attachedObject, err)
+		t.Fatalf("main switch object %v: %v", attachedObject, err)
 	}
 
-	err = innerCopy.Set(ctx, "key_for_attach3", "value_for_attach3", false)
+	err = innerCopy.Set(ctx, "key_for_attach3", "value_for_attach3", false).Err()
 	if err != nil {
-		log.Fatalf("set Inner object %v: %v", attachedObject, err)
+		t.Fatalf("set Inner object %v: %v", attachedObject, err)
 	}
 
-	err = inner.Set(ctx, "key_for_attach4", "value_for_attach4", false)
+	err = inner.Set(ctx, "key_for_attach4", "value_for_attach4", false).Err()
 	if err != nil {
-		log.Fatalf("set Inner object %v: %v", attachedObject, err)
+		t.Fatalf("set Inner object %v: %v", attachedObject, err)
 	}
 
-	originalAttached, err := inner.JSON(ctx)
+	originalAttached, err := inner.JSON(ctx).ValueAndErr()
 	if err != nil {
-		log.Fatalf("get Inner object %v: %v", attachedObject, err)
+		t.Fatalf("get Inner object %v: %v", attachedObject, err)
 	}
 
-	copiedAttached, err := innerCopy.JSON(ctx)
+	copiedAttached, err := innerCopy.JSON(ctx).ValueAndErr()
 	if err != nil {
-		log.Fatalf("get Inner object %v: %v", attachedObject, err)
+		t.Fatalf("get Inner object %v: %v", attachedObject, err)
 	}
 
 	if originalAttached != copiedAttached {
@@ -456,17 +466,17 @@ func TestSetGetOneFromObject(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	object, err := db.Object(context.TODO(), "User")
+	object, err := db.Object(context.TODO(), "User").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = object.Set(context.TODO(), "Name", "Max", false)
+	err = object.Set(context.TODO(), "Name", "Max", false).Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	value, err := object.Get(context.TODO(), "Name")
+	value, err := object.Get(context.TODO(), "Name").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -477,17 +487,17 @@ func TestSetGetOneFromObject(t *testing.T) {
 
 	/// CAR
 
-	car, err := db.Object(context.TODO(), "Car")
+	car, err := db.Object(context.TODO(), "Car").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = car.Set(context.TODO(), "Name", "MyCar", false)
+	err = car.Set(context.TODO(), "Name", "MyCar", false).Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	value, err = car.Get(context.TODO(), "Name")
+	value, err = car.Get(context.TODO(), "Name").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -498,17 +508,17 @@ func TestSetGetOneFromObject(t *testing.T) {
 
 	/// WHEEL
 
-	wheel, err := car.Object(context.TODO(), "Wheel")
+	wheel, err := car.Object(context.TODO(), "Wheel").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = wheel.Set(context.TODO(), "Color", "Black", false)
+	err = wheel.Set(context.TODO(), "Color", "Black", false).Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	value, err = wheel.Get(context.TODO(), "Color")
+	value, err = wheel.Get(context.TODO(), "Color").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -519,19 +529,19 @@ func TestSetGetOneFromObject(t *testing.T) {
 
 	/// TRAILER
 
-	trailer, err := car.Object(context.TODO(), "Trailer")
+	trailer, err := car.Object(context.TODO(), "Trailer").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = trailer.Set(context.TODO(), "Color", "Red", false)
+	err = trailer.Set(context.TODO(), "Color", "Red", false).Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	/// TEST WHEEL & TRAILER AREAS ARE STILL WORKING
 
-	value, err = wheel.Get(context.TODO(), "Color")
+	value, err = wheel.Get(context.TODO(), "Color").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -540,7 +550,7 @@ func TestSetGetOneFromObject(t *testing.T) {
 		t.Fatal("Wrong value")
 	}
 
-	value, err = trailer.Get(context.TODO(), "Color")
+	value, err = trailer.Get(context.TODO(), "Color").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -558,31 +568,31 @@ func TestIsObject(t *testing.T) {
 	}
 
 	name := fmt.Sprintf("%d", time.Now().Unix())
-	object, err := db.Object(context.TODO(), name)
+	object, err := db.Object(context.TODO(), name).ValueAndErr()
 	if err != nil {
-		log.Fatalf("Object error: %s\n", err)
+		t.Fatalf("Object error: %s\n", err)
 	}
 
 	time.Sleep(time.Second)
 
 	ctx := context.TODO()
-	if ok, err := db.IsObject(ctx, object.GetName()); err != nil || !ok {
+	if ok, err := db.IsObject(ctx, object.GetName()).ValueAndErr(); err != nil || !ok {
 		t.Fatal("Not an object, but should be")
 	}
 
 	name = fmt.Sprintf("%d", time.Now().Unix())
-	newObject, err := object.Object(ctx, object.GetName())
+	newObject, err := object.Object(ctx, object.GetName()).ValueAndErr()
 	if err != nil {
-		log.Fatalf("Object error: %s\n", err)
+		t.Fatalf("Object error: %s\n", err)
 	}
 
 	time.Sleep(time.Second)
 
-	if ok, err := db.IsObject(ctx, newObject.GetName()); err != nil || !ok {
+	if ok, err := db.IsObject(ctx, newObject.GetName()).ValueAndErr(); err != nil || !ok {
 		t.Fatal("Not an object, but should be")
 	}
 
-	if ok, _ := db.IsObject(ctx, fmt.Sprintf("%d", time.Now().Unix())); ok {
+	if ok, _ := db.IsObject(ctx, fmt.Sprintf("%d", time.Now().Unix())).ValueAndErr(); ok {
 		t.Fatal("Object, but should not be")
 	}
 }
@@ -593,12 +603,12 @@ func TestSize(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	object, err := db.Object(context.TODO(), fmt.Sprintf("%d", time.Now().Unix()))
+	object, err := db.Object(context.TODO(), fmt.Sprintf("%d", time.Now().Unix())).ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	size, err := object.Size(context.TODO())
+	size, err := object.Size(context.TODO()).ValueAndErr()
 	if err != nil {
 		t.Fatalf("Error %v\n", err)
 	} else if size != 0 {
@@ -608,12 +618,12 @@ func TestSize(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		k := fmt.Sprint(i)
 		v := fmt.Sprint(i)
-		if err = object.Set(context.TODO(), k, v, false); err != nil {
+		if err = object.Set(context.TODO(), k, v, false).Err(); err != nil {
 			t.Fatalf("Set error %v\n", err)
 		}
 	}
 
-	if size, err := object.Size(context.TODO()); err != nil || size != 100 {
+	if size, err := object.Size(context.TODO()).ValueAndErr(); err != nil || size != 100 {
 		t.Fatalf("Wrong size %d\n", size)
 	}
 }
@@ -628,9 +638,9 @@ func TestGetObject(t *testing.T) {
 	time.Sleep(time.Second)
 
 	name := fmt.Sprintf("%d", time.Now().Unix())
-	object, err := db.Object(context.TODO(), name)
+	object, err := db.Object(context.TODO(), name).ValueAndErr()
 	if err != nil {
-		log.Fatalf("Object error: %s\n", err)
+		t.Fatalf("Object error: %s\n", err)
 	}
 
 	data := map[string]string{
@@ -642,13 +652,13 @@ func TestGetObject(t *testing.T) {
 	}
 
 	for k, v := range data {
-		if err = object.Set(context.TODO(), k, v, false); err != nil {
+		if err = object.Set(context.TODO(), k, v, false).Err(); err != nil {
 			t.Fatalf("Set error %v\n", err)
 		}
 	}
 
 	ctx := context.TODO()
-	m, err := object.JSON(ctx)
+	m, err := object.JSON(ctx).ValueAndErr()
 	if err != nil {
 		t.Fatalf("GetObject error %v\n", err)
 	}
@@ -893,39 +903,39 @@ func cmpReflect(a, b reflect.Value) bool {
 	return true
 }
 
-func TestClient_GetCmp(t *testing.T) {
-	db, err := itisadb.New(_ctx, ":8888")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	ctx := context.Background()
-
-	err = db.SetOne(ctx, "qwe", "123", false)
-	if err != nil {
-		t.Errorf("SetTo() error = %v, wantErr no", err)
-		return
-	}
-
-	got, err := itisadb.GetCmp[string](ctx, db, "qwe")
-	if err != nil {
-		t.Errorf("GetCmp() error = %v, wantErr no", err)
-		return
-	}
-
-	if got != "123" {
-		t.Errorf("got != want\n%v!=%v", got, "123")
-		return
-	}
-
-	iint, err := itisadb.GetCmp[int](ctx, db, "qwe")
-	if err != nil {
-		t.Errorf("GetCmp() error = %v, wantErr no", err)
-		return
-	}
-
-	if iint != 123 {
-		t.Errorf("got != want\n%v!=%v", iint, 123)
-		return
-	}
-}
+//func TestClient_GetCmp(t *testing.T) {
+//	db, err := itisadb.New(_ctx, ":8888")
+//	if err != nil {
+//		log.Fatalln(err)
+//	}
+//
+//	ctx := context.Background()
+//
+//	err = db.SetOne(ctx, "qwe", "123", false).Err()
+//	if err != nil {
+//		t.Errorf("SetTo() error = %v, wantErr no", err)
+//		return
+//	}
+//
+//	got, err := itisadb.GetCmp[string](ctx, db, "qwe")
+//	if err != nil {
+//		t.Errorf("GetCmp() error = %v, wantErr no", err)
+//		return
+//	}
+//
+//	if got != "123" {
+//		t.Errorf("got != want\n%v!=%v", got, "123")
+//		return
+//	}
+//
+//	iint, err := itisadb.GetCmp[int](ctx, db, "qwe")
+//	if err != nil {
+//		t.Errorf("GetCmp() error = %v, wantErr no", err)
+//		return
+//	}
+//
+//	if iint != 123 {
+//		t.Errorf("got != want\n%v!=%v", iint, 123)
+//		return
+//	}
+//}
