@@ -5,25 +5,27 @@ import (
 	"golang.org/x/net/context"
 )
 
-func (c *Client) del(ctx context.Context, key string, server int32) error {
-	if ctx.Err() != nil {
-		return ctx.Err()
-	}
+func (c *Client) del(ctx context.Context, key string, server int32) (res Result[bool]) {
 	_, err := c.cl.Delete(withAuth(ctx), &api.DeleteRequest{
 		Key:    key,
 		Server: &server,
 	})
+
 	if err != nil {
-		return convertGRPCError(err)
+		res.err = convertGRPCError(err)
+	} else {
+		res.value = true
 	}
-	return nil
+
+	return res
 }
 
-func (c *Client) Del(ctx context.Context, key string) error {
-	if ctx.Err() != nil {
-		return ctx.Err()
-	}
+func (c *Client) Del(ctx context.Context, key string) Result[bool] {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	return c.del(ctx, key, c.keysAndServers[key])
+
+	s := c.keysAndServers[key]
+	delete(c.keysAndServers, key)
+
+	return c.del(ctx, key, s)
 }

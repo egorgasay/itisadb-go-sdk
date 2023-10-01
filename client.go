@@ -87,30 +87,36 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (*Client, error
 }
 
 // Object creates a new object.
-func (c *Client) Object(ctx context.Context, name string) (*Object, error) {
+func (c *Client) Object(ctx context.Context, name string) Result[*Object] {
 	_, err := c.cl.Object(withAuth(ctx), &api.ObjectRequest{
 		Name: name,
 	})
 
+	r := Result[*Object]{}
+
 	if err != nil {
-		return nil, convertGRPCError(err)
+		r.err = convertGRPCError(err)
+	} else {
+		r.value = &Object{
+			cl:   c.cl,
+			name: name,
+		}
 	}
 
-	return &Object{
-		name: name,
-		cl:   c.cl,
-	}, nil
+	return r
 }
 
 // IsObject checks if it is an object or not.
-func (c *Client) IsObject(ctx context.Context, name string) (bool, error) {
+func (c *Client) IsObject(ctx context.Context, name string) (res Result[bool]) {
 	r, err := c.cl.IsObject(withAuth(ctx), &api.IsObjectRequest{
 		Name: name,
 	})
 
 	if err != nil {
-		return false, convertGRPCError(err)
+		res.err = convertGRPCError(err)
+	} else {
+		res.value = r.Ok
 	}
 
-	return r.Ok, nil
+	return res
 }
