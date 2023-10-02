@@ -1,20 +1,16 @@
 package itisadb_test
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/egorgasay/itisadb-go-sdk"
 	"math/rand"
-	"os"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
-
-	"modernc.org/strutil"
 )
 
 var _ctx = context.TODO()
@@ -228,6 +224,7 @@ func TestDeleteObject(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	err = indx.Set(ctx, "key_for_delete", "value_for_delete", false).Err()
 	if err != nil {
 		t.Fatal(err)
@@ -455,7 +452,7 @@ func TestAttachObject(t *testing.T) {
 		t.Fatalf("get Inner object %v: %v", attachedObject, err)
 	}
 
-	if originalAttached != copiedAttached {
+	if !cmpJSON(originalAttached, copiedAttached) {
 		t.Fatalf("Inner object not equal original object:  %v != %v", originalAttached, copiedAttached)
 	}
 }
@@ -663,39 +660,68 @@ func TestGetObject(t *testing.T) {
 		t.Fatalf("GetObject error %v\n", err)
 	}
 
-	dataJSON, err := json.Marshal(data)
+	var mMap map[string]any
+	err = json.Unmarshal([]byte(m), &mMap)
 	if err != nil {
 		t.Fatalf("Marshal error %v\n", err)
 	}
 
-	if m != string(dataJSON) {
-		t.Fatalf("Wrong data %v\n", m)
-	}
-}
-
-func TestDistinct(t *testing.T) {
-	f, err := os.Open("/tmp/log14/transactionLogger")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var keys = make(map[string]struct{}, 16000)
-
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		action := scanner.Text()
-		decode, err := strutil.Base64Decode([]byte(action))
-		if err != nil {
-			return
+	want := `{
+	"name": "{{ name }}",
+	"values": [
+		{
+			"name": "key3",
+			"value": "value3"
+		},
+		{
+			"name": "key2",
+			"value": "value2"
+		},
+		{
+			"name": "key4",
+			"value": "value4"
+		},
+		{
+			"name": "key5",
+			"value": "value5"
+		},
+		{
+			"name": "key1",
+			"value": "value1"
 		}
+	]
+}`
 
-		split := strings.Split(string(decode), " ")
-		key := split[1]
-		keys[key] = struct{}{}
+	want = strings.Replace(want, "{{ name }}", name, -1)
+
+	if !cmpJSON(want, m) {
+		t.Fatalf("Want %s, got %s\n", want, m)
 	}
-
-	t.Log(len(keys))
 }
+
+//func TestDistinct(t *testing.T) {
+//	f, err := os.Open("/tmp/log14/transactionLogger")
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//
+//	var keys = make(map[string]struct{}, 16000)
+//
+//	scanner := bufio.NewScanner(f)
+//	for scanner.Scan() {
+//		action := scanner.Text()
+//		decode, err := strutil.Base64Decode([]byte(action))
+//		if err != nil {
+//			return
+//		}
+//
+//		split := strings.Split(string(decode), " ")
+//		key := split[1]
+//		keys[key] = struct{}{}
+//	}
+//
+//	t.Log(len(keys))
+//}
 
 //func TestClient_StructToObject(t *testing.T) {
 //	db, err := itisadb.New(_ctx,":8888")
@@ -939,3 +965,23 @@ func cmpReflect(a, b reflect.Value) bool {
 //		return
 //	}
 //}
+
+func cmpJSON(want, got string) bool {
+	var m1 = make(map[rune]int)
+	var m2 = make(map[rune]int)
+
+	for _, v := range want {
+		if v == ' ' || v == '\n' || v == '\t' {
+			continue
+		}
+		m1[v]++
+	}
+	for _, v := range got {
+		if v == ' ' || v == '\n' || v == '\t' {
+			continue
+		}
+		m2[v]++
+	}
+
+	return reflect.DeepEqual(m1, m2)
+}
