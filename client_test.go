@@ -723,99 +723,146 @@ func TestGetObject(t *testing.T) {
 //	t.Log(len(keys))
 //}
 
-//func TestClient_StructToObject(t *testing.T) {
-//	db, err := itisadb.New(_ctx,":8888")
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	type Wheel struct {
-//		Color string
-//		Size  string
-//	}
-//
-//	type Trailer struct {
-//		Color string
-//		Size  string
-//	}
-//
-//	type Car struct {
-//		Name    string
-//		Wheel   *Wheel
-//		Trailer *Trailer
-//	}
-//
-//	type IQ struct {
-//		Count int
-//	}
-//
-//	var t1 = "qwe"
-//	var t2 = &t1
-//	var t3 = &t2
-//
-//	type User struct {
-//		Name  string
-//		Age   int
-//		Email string
-//		Car   *Car
-//		IQ    IQ
-//		T     ***string
-//	}
-//
-//	user := User{
-//		Name:  "Max",
-//		Age:   25,
-//		Email: "max@mail.ru",
-//		Car: &Car{
-//			Name: "MyCar",
-//			Wheel: &Wheel{
-//				Color: "Black",
-//				Size:  "Big",
-//			},
-//			Trailer: &Trailer{
-//				Color: "Red",
-//				Size:  "Big",
-//			},
-//		},
-//		IQ: IQ{
-//			Count: 1,
-//		},
-//		T: &t3,
-//	}
-//
-//	object, err := db.StructToObject(context.TODO(), fmt.Sprintf("User%d", 1), user)
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	mu := map[string]string{
-//		"Name":  "Max",
-//		"Car":   "\n\tName: MyCar\n\tWheel: \n\t\tSize: Big\n\t\tColor: Black\n\tTrailer: \n\t\t\tColor: Red\n\t\t\tSize: Big",
-//		"Age":   "25",
-//		"Email": "max@mail.ru",
-//		"IQ":    "\n\t\tCount: 1",
-//		"T":     "qwe",
-//	}
-//
-//	mi, err := object.JSON(context.TODO())
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	splittedMi := strings.Split(strings.Replace(strings.Replace(mi["Car"], "\t", "", -1), "\n", "", -1), "")
-//	splittedMu := strings.Split(strings.Replace(strings.Replace(mu["Car"], "\t", "", -1), "\n", "", -1), "")
-//
-//	if !IsTheSameArray(splittedMi, splittedMu) {
-//		t.Fatalf("want\n%v,\ngot \n%v", splittedMu, splittedMi)
-//	}
-//
-//	delete(mu, "Car")
-//	delete(mi, "Car")
-//
-//	if !reflect.DeepEqual(mi, mu) {
-//		t.Fatalf("want\n%v,\ngot \n%v", mu, mi)
-//	}
-//}
+func TestClient_StructToObject(t *testing.T) {
+	db, err := itisadb.New(_ctx, ":8888")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	type Wheel struct {
+		Color string
+		Size  string
+	}
+
+	type Trailer struct {
+		Color string
+		Size  string
+	}
+
+	type Car struct {
+		Name    string
+		Wheel   *Wheel
+		Trailer *Trailer
+	}
+
+	type IQ struct {
+		Count int
+	}
+
+	var t1 = "qwe"
+	var t2 = &t1
+	var t3 = &t2
+
+	type User struct {
+		Name  string
+		Age   int
+		Email string
+		Car   *Car
+		IQ    IQ
+		T     ***string
+	}
+
+	user := User{
+		Name:  "Max",
+		Age:   25,
+		Email: "max@mail.ru",
+		Car: &Car{
+			Name: "MyCar",
+			Wheel: &Wheel{
+				Color: "Black",
+				Size:  "Big",
+			},
+			Trailer: &Trailer{
+				Color: "Red",
+				Size:  "Big",
+			},
+		},
+		IQ: IQ{
+			Count: 1,
+		},
+		T: &t3,
+	}
+
+	object, err := db.StructToObject(context.TODO(), fmt.Sprintf("User%d", 1), user)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mi, err := object.JSON(context.TODO()).ValueAndErr()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := `{
+	"name": "User1",
+	"values": [
+		{
+			"name": "Name",
+			"value": "Max"
+		},
+		{
+			"name": "IQ",
+			"values": [
+				{
+					"name": "Count",
+					"value": "1"
+				}
+			]
+		},
+		{
+			"name": "T",
+			"value": "qwe"
+		},
+		{
+			"name": "Age",
+			"value": "25"
+		},
+		{
+			"name": "Email",
+			"value": "max@mail.ru"
+		},
+		{
+			"name": "Car",
+			"values": [
+				{
+					"name": "Wheel",
+					"values": [
+						{
+							"name": "Color",
+							"value": "Black"
+						},
+						{
+							"name": "Size",
+							"value": "Big"
+						}
+					]
+				},
+				{
+					"name": "Trailer",
+					"values": [
+						{
+							"name": "Color",
+							"value": "Red"
+						},
+						{
+							"name": "Size",
+							"value": "Big"
+						}
+					]
+				},
+				{
+					"name": "Name",
+					"value": "MyCar"
+				}
+			]
+		}
+	]
+}`
+
+	if !cmpJSON(mi, want) {
+		t.Fatalf("Want %s, got %s\n", want, mi)
+	}
+}
 
 func IsTheSameArray[T comparable](a, b []T) bool {
 	if len(a) != len(b) {
