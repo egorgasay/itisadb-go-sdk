@@ -1,8 +1,17 @@
 package itisadb
 
 import (
+	"errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+)
+
+var (
+	ErrNotFound         = errors.New("not found")
+	ErrUnavailable      = errors.New("storage is unavailable")
+	ErrUnauthorized     = errors.New("unauthorized")
+	ErrObjectNotFound   = errors.New("object not found")
+	ErrUniqueConstraint = errors.New("unique constraint failed")
 )
 
 func convertGRPCError(err error) error {

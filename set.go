@@ -2,23 +2,23 @@ package itisadb
 
 import (
 	"context"
-	"errors"
 	"github.com/egorgasay/itisadb-go-sdk/api"
 )
 
-const (
-	setDefault = -iota
-	setToAll
+var (
+	setDefault int32 = 0
+	setToAll   int32 = -1
 )
 
-var ErrUniqueConstraint = errors.New("unique constraint failed")
-
-func (c *Client) SetTo(ctx context.Context, key, value string, server int32, uniques bool) (res Result[int32]) {
+func (c *Client) set(ctx context.Context, key, value string, opt SetOptions) (res Result[int32]) {
 	r, err := c.cl.Set(withAuth(ctx), &api.SetRequest{
-		Key:     key,
-		Value:   value,
-		Server:  &server,
-		Uniques: uniques,
+		Key:   key,
+		Value: value,
+		Options: &api.SetRequest_Options{
+			Server:   opt.Server,
+			Uniques:  opt.Uniques,
+			ReadOnly: opt.ReadOnly,
+		},
 	})
 
 	if err != nil {
@@ -31,8 +31,13 @@ func (c *Client) SetTo(ctx context.Context, key, value string, server int32, uni
 }
 
 // SetOne sets the value for the key to gRPCis.
-func (c *Client) SetOne(ctx context.Context, key, value string, uniques bool) Result[bool] {
-	server, err := c.SetTo(ctx, key, value, setDefault, uniques).ValueAndErr()
+func (c *Client) SetOne(ctx context.Context, key, value string, opts ...SetOptions) Result[bool] {
+	opt := SetOptions{}
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+
+	server, err := c.set(ctx, key, value, opt).ValueAndErr()
 	if err != nil {
 		return Result[bool]{err: err}
 	}
@@ -45,8 +50,16 @@ func (c *Client) SetOne(ctx context.Context, key, value string, uniques bool) Re
 }
 
 // SetToAll sets the value for the key on all servers.
-func (c *Client) SetToAll(ctx context.Context, key, value string, uniques bool) Result[bool] {
-	r := c.SetTo(ctx, key, value, setToAll, uniques)
+func (c *Client) SetToAll(ctx context.Context, key, value string, opts ...SetOptions) Result[bool] {
+	opt := SetOptions{
+		Server: &setToAll,
+	}
+
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+
+	r := c.set(ctx, key, value, opt)
 	if r.Err() != nil {
 		return Result[bool]{err: convertGRPCError(r.Err())}
 	}
@@ -55,9 +68,15 @@ func (c *Client) SetToAll(ctx context.Context, key, value string, uniques bool) 
 }
 
 // SetMany sets a set of values for gRPCis.
-func (c *Client) SetMany(ctx context.Context, keyValue map[string]string, uniques bool) Result[bool] {
-	for key, value := range keyValue {
-		err := c.SetTo(ctx, key, value, setDefault, uniques).Err()
+func (c *Client) SetMany(ctx context.Context, kv map[string]string, opts ...SetOptions) Result[bool] {
+	opt := SetOptions{}
+
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+
+	for key, value := range kv {
+		err := c.set(ctx, key, value, opt).Err()
 		if err != nil {
 			return Result[bool]{err: convertGRPCError(err)}
 		}
@@ -66,9 +85,9 @@ func (c *Client) SetMany(ctx context.Context, keyValue map[string]string, unique
 }
 
 // SetManyOpts gets a lot of values from gRPCis with opts.
-func (c *Client) SetManyOpts(ctx context.Context, keyValue map[string]Value, uniques bool) Result[bool] {
+func (c *Client) SetManyOpts(ctx context.Context, keyValue map[string]Value) Result[bool] {
 	for key, value := range keyValue {
-		err := c.SetTo(ctx, key, value.Value, value.Opts.Server, uniques).Err()
+		err := c.set(ctx, key, value.Value, value.Options).Err()
 		if err != nil {
 			return Result[bool]{err: convertGRPCError(err)}
 		}

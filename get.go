@@ -2,7 +2,6 @@ package itisadb
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/egorgasay/itisadb-go-sdk/api"
 )
@@ -12,12 +11,12 @@ const (
 	getFromDisk
 )
 
-var ErrNotFound = errors.New("not found")
-
-func (c *Client) GetFrom(ctx context.Context, key string, server int32) (res Result[string]) {
+func (c *Client) get(ctx context.Context, key string, opts GetOptions) (res Result[string]) {
 	r, err := c.cl.Get(withAuth(ctx), &api.GetRequest{
-		Key:    key,
-		Server: &server,
+		Key: key,
+		Options: &api.GetRequest_Options{
+			Server: opts.Server,
+		},
 	})
 
 	if err != nil {
@@ -30,14 +29,27 @@ func (c *Client) GetFrom(ctx context.Context, key string, server int32) (res Res
 }
 
 // GetOne gets the value by the key from gRPCis.
-func (c *Client) GetOne(ctx context.Context, key string) (res Result[string]) {
+func (c *Client) GetOne(ctx context.Context, key string, opts ...GetOptions) (res Result[string]) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	return c.GetFrom(ctx, key, c.keysAndServers[key])
+
+	opt := GetOptions{}
+
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+
+	if opt.Server != nil {
+		if s, ok := c.keysAndServers[key]; ok {
+			opt.Server = &s
+		}
+	}
+
+	return c.get(ctx, key, opt)
 }
 
 // GetMany gets a lot of values from gRPCis.
-func (c *Client) GetMany(ctx context.Context, keys []string) (map[string]string, error) {
+func (c *Client) GetMany(ctx context.Context, keys []string, opts ...GetOptions) (map[string]string, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -45,8 +57,14 @@ func (c *Client) GetMany(ctx context.Context, keys []string) (map[string]string,
 	var keyValue = make(map[string]string, 10)
 	var err error
 
+	opt := GetOptions{}
+
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+
 	for _, key := range keys {
-		keyValue[key], err = c.GetOne(ctx, key).ValueAndErr()
+		keyValue[key], err = c.GetOne(ctx, key, opt).ValueAndErr()
 		if err != nil {
 			return nil, fmt.Errorf("get %s: %w", key, err)
 		}
@@ -64,7 +82,7 @@ func (c *Client) GetManyOpts(ctx context.Context, keys []Key) (map[string]string
 	var err error
 
 	for _, key := range keys {
-		keyValue[key.Key], err = c.GetFrom(ctx, key.Key, key.Opts.Server).ValueAndErr()
+		keyValue[key.Key], err = c.get(ctx, key.Key, key.Options).ValueAndErr()
 		if err != nil {
 			return nil, err
 		}

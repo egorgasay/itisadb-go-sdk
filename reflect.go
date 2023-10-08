@@ -57,7 +57,7 @@ func (c *Client) structToObject(ctx context.Context, name string, structure any,
 
 		switch fieldType.Type.Kind() {
 		case reflect.String:
-			err = object.Set(ctx, key, value.(string), false).Err()
+			err = object.Set(ctx, key, value.(string)).Err()
 		case reflect.Struct:
 			_, err = c.structToObject(ctx, key, value, object)
 		case reflect.Pointer:
@@ -69,10 +69,10 @@ func (c *Client) structToObject(ctx context.Context, name string, structure any,
 			case reflect.Struct:
 				_, err = c.structToObject(ctx, key, field.Interface(), object)
 			default:
-				err = object.Set(ctx, key, fmt.Sprint(field.Interface()), false).Err()
+				err = object.Set(ctx, key, fmt.Sprint(field.Interface())).Err()
 			}
 		default:
-			err = object.Set(ctx, key, fmt.Sprint(value), false).Err()
+			err = object.Set(ctx, key, fmt.Sprint(value)).Err()
 		}
 
 		if err != nil {

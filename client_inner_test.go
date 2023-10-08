@@ -22,3 +22,32 @@ func TestAuth(t *testing.T) {
 	t.Log("Auth OK")
 	t.Log(resp.ServersInfo)
 }
+
+// TestSetToGetFrom to run this test, itisadb must be run on :8888.
+func TestSetToGetFrom(t *testing.T) {
+	db, err := New(context.TODO(), ":8888")
+	if err != nil {
+		return
+	}
+
+	var snum int32 = 1
+
+	ctx := context.TODO()
+	err = db.set(ctx, "fff", "qqq", SetOptions{
+		Server:   &snum,
+		Uniques:  false,
+		ReadOnly: false,
+	}).Err()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	get, err := db.get(ctx, "fff", GetOptions{Server: &snum}).ValueAndErr()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if get != "qqq" {
+		t.Fatal("Wrong value")
+	}
+}

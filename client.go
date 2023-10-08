@@ -2,7 +2,6 @@ package itisadb
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/egorgasay/itisadb-go-sdk/api"
 	"sync"
@@ -20,21 +19,20 @@ type Client struct {
 	cl api.ItisaDBClient
 }
 
-type Opts struct {
+type Options struct {
 	Server int32
+	Unique bool
 }
 
 type Value struct {
-	Value string
-	Opts  Opts
+	Value   string
+	Options SetOptions
 }
 
 type Key struct {
-	Key  string
-	Opts Opts
+	Key     string
+	Options GetOptions
 }
-
-var ErrUnavailable = errors.New("storage is unavailable")
 
 type Credentials struct {
 	Login    string
@@ -45,10 +43,15 @@ type Config struct {
 	Credentials Credentials
 }
 
+const (
+	DefaultUser     = "itisadb"
+	DefaultPassword = "itisadb"
+)
+
 var defaultConfig = Config{
 	Credentials: Credentials{
-		Login:    "itisadb",
-		Password: "itisadb",
+		Login:    DefaultUser,
+		Password: DefaultPassword,
 	},
 }
 
@@ -119,4 +122,9 @@ func (c *Client) IsObject(ctx context.Context, name string) (res Result[bool]) {
 	}
 
 	return res
+}
+
+func ToServerNumber(x int) *int32 {
+	var y = int32(x)
+	return &y
 }

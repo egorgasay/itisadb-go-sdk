@@ -5,10 +5,10 @@ import (
 	"golang.org/x/net/context"
 )
 
-func (c *Client) del(ctx context.Context, key string, server int32) (res Result[bool]) {
+func (c *Client) del(ctx context.Context, key string, opts DeleteOptions) (res Result[bool]) {
 	_, err := c.cl.Delete(withAuth(ctx), &api.DeleteRequest{
-		Key:    key,
-		Server: &server,
+		Key:     key,
+		Options: &api.DeleteRequest_Options{Server: opts.Server},
 	})
 
 	if err != nil {
@@ -20,12 +20,22 @@ func (c *Client) del(ctx context.Context, key string, server int32) (res Result[
 	return res
 }
 
-func (c *Client) Del(ctx context.Context, key string) Result[bool] {
+func (c *Client) Del(ctx context.Context, key string, opts ...DeleteOptions) Result[bool] {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	s := c.keysAndServers[key]
+	s, ok := c.keysAndServers[key]
 	delete(c.keysAndServers, key)
 
-	return c.del(ctx, key, s)
+	opt := DeleteOptions{}
+
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+
+	if ok {
+		opt.Server = &s
+	}
+
+	return c.del(ctx, key, opt)
 }
