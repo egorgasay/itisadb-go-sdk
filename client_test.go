@@ -1011,3 +1011,82 @@ func cmpJSON(want, got string) bool {
 
 	return reflect.DeepEqual(m1, m2)
 }
+
+func TestClient_CreateUser(t *testing.T) {
+	db, err := itisadb.New(_ctx, ":8888")
+	if err != nil {
+		t.Fatalf("New: %v", err)
+		return
+	}
+
+	ctx := context.TODO()
+
+	_, err = db.CreateUser(ctx, "max", "123")
+	if err != nil {
+		t.Fatalf("CreateUser: %v", err)
+		return
+	}
+
+	conf := itisadb.Config{
+		Credentials: itisadb.Credentials{
+			Login: "max", Password: "123",
+		},
+	}
+
+	db, err = itisadb.New(_ctx, ":8888", conf)
+	if err != nil {
+		t.Fatalf("New with config: %v", err)
+		return
+	}
+
+	exists, err := db.CreateUser(ctx, "max2", "123", itisadb.CreateUserOptions{
+		Level: itisadb.HighLevel,
+	})
+
+	if err != nil {
+		t.Fatalf("CreateUser with options: %v", err)
+		return
+	}
+
+	if exists != true {
+		t.Fatalf("user should exist")
+		return
+	}
+}
+
+func TestClient_DeleteUser(t *testing.T) {
+	db, err := itisadb.New(_ctx, ":8888")
+	if err != nil {
+		t.Fatalf("New: %v", err)
+		return
+	}
+
+	ctx := context.TODO()
+
+	_, err = db.CreateUser(ctx, "max", "123")
+	if err != nil {
+		t.Fatalf("CreateUser: %v", err)
+		return
+	}
+
+	found, err := db.DeleteUser(ctx, "max")
+	if err != nil {
+		t.Fatalf("DeleteUser: %v", err)
+		return
+	}
+
+	if found != true {
+		t.Fatalf("user should exist")
+		return
+	}
+
+	found, err = db.DeleteUser(ctx, "max2")
+	if err != nil {
+		t.Fatalf("DeleteUser with non-existing user: %v", err)
+		return
+	}
+
+	if found != false {
+		t.Fatalf("user should not exist")
+	}
+}

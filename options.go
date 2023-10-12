@@ -58,3 +58,7 @@ type ConnectOptions struct {
 type DeleteKeyOptions struct {
 	Server *int32
 }
+
+type CreateUserOptions struct {
+	Level uint8
+}
