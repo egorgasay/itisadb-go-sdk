@@ -1012,6 +1012,43 @@ func cmpJSON(want, got string) bool {
 	return reflect.DeepEqual(m1, m2)
 }
 
+func TestClient_DeleteUser(t *testing.T) {
+	db, err := itisadb.New(_ctx, ":8888")
+	if err != nil {
+		t.Fatalf("New: %v", err)
+		return
+	}
+
+	ctx := context.TODO()
+
+	err = db.CreateUser(ctx, "max", "123").Err()
+	if err != nil {
+		t.Fatalf("CreateUser: %v", err)
+		return
+	}
+
+	res := db.DeleteUser(ctx, "max")
+	if res.Err() != nil {
+		t.Fatalf("DeleteUser: %v", err)
+		return
+	}
+
+	if res.Val() != true {
+		t.Fatalf("user should exist")
+		return
+	}
+
+	res = db.DeleteUser(ctx, "max2")
+	if res.Err() != nil {
+		t.Fatalf("DeleteUser with non-existing user: %v", res.Err())
+		return
+	}
+
+	if res.Val() != false {
+		t.Fatalf("user should not exist")
+	}
+}
+
 func TestClient_CreateUser(t *testing.T) {
 	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
@@ -1021,7 +1058,13 @@ func TestClient_CreateUser(t *testing.T) {
 
 	ctx := context.TODO()
 
-	_, err = db.CreateUser(ctx, "max", "123")
+	err = db.DeleteUser(ctx, "max").Err()
+	if err != nil {
+		t.Fatalf("DeleteUser: %v", err)
+		return
+	}
+
+	err = db.CreateUser(ctx, "max", "123").Err()
 	if err != nil {
 		t.Fatalf("CreateUser: %v", err)
 		return
@@ -1039,22 +1082,22 @@ func TestClient_CreateUser(t *testing.T) {
 		return
 	}
 
-	exists, err := db.CreateUser(ctx, "max2", "123", itisadb.CreateUserOptions{
-		Level: itisadb.HighLevel,
+	res := db.CreateUser(ctx, "max2", "123", itisadb.CreateUserOptions{
+		Level: itisadb.DefaultLevel,
 	})
 
-	if err != nil {
-		t.Fatalf("CreateUser with options: %v", err)
+	if res.Err() != nil {
+		t.Fatalf("CreateUser with options: %v", res.Err())
 		return
 	}
 
-	if exists != true {
+	if res.Val() != true {
 		t.Fatalf("user should exist")
 		return
 	}
 }
 
-func TestClient_DeleteUser(t *testing.T) {
+func TestClient_ChangePassword(t *testing.T) {
 	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
 		t.Fatalf("New: %v", err)
@@ -1063,30 +1106,77 @@ func TestClient_DeleteUser(t *testing.T) {
 
 	ctx := context.TODO()
 
-	_, err = db.CreateUser(ctx, "max", "123")
+	err = db.CreateUser(ctx, "max", "123").Err()
 	if err != nil {
 		t.Fatalf("CreateUser: %v", err)
 		return
 	}
 
-	found, err := db.DeleteUser(ctx, "max")
+	err = db.ChangePassword(ctx, "max", "1234")
 	if err != nil {
-		t.Fatalf("DeleteUser: %v", err)
+		t.Fatalf("ChangePassword: %v", err)
 		return
 	}
 
-	if found != true {
-		t.Fatalf("user should exist")
-		return
-	}
-
-	found, err = db.DeleteUser(ctx, "max2")
+	db, err = itisadb.New(_ctx, ":8888", itisadb.Config{
+		Credentials: itisadb.Credentials{
+			Login: "max", Password: "1234",
+		},
+	})
 	if err != nil {
-		t.Fatalf("DeleteUser with non-existing user: %v", err)
+		t.Fatalf("New with new password: %v", err)
 		return
 	}
 
-	if found != false {
-		t.Fatalf("user should not exist")
+	db, err = itisadb.New(_ctx, ":8888", itisadb.Config{
+		Credentials: itisadb.Credentials{
+			Login: "max", Password: "63231fwe23e1e3",
+		},
+	})
+	if err == nil {
+		t.Fatal("no error with wrong password")
+		return
+	}
+}
+
+func TestClient_ChangeLevel(t *testing.T) {
+	db, err := itisadb.New(_ctx, ":8888")
+	if err != nil {
+		t.Fatalf("New: %v", err)
+		return
+	}
+
+	ctx := context.TODO()
+
+	err = db.CreateUser(ctx, "max", "123", itisadb.CreateUserOptions{
+		Level: itisadb.DefaultLevel,
+	}).Err()
+	if err != nil {
+		t.Fatalf("CreateUser: %v", err)
+		return
+	}
+
+	// Create "max" with default level
+	res := db.Object(ctx, "max", itisadb.ObjectOptions{
+		Level: itisadb.DefaultLevel,
+	})
+
+	if res.Err() != nil {
+		t.Fatalf("Object: %v", res.Err())
+	}
+
+	// Change "max" to restricted level
+	err = db.ChangeLevel(ctx, "max", itisadb.RestrictedLevel)
+	if err != nil {
+		t.Fatalf("ChangePassword: %v", err)
+		return
+	}
+
+	res = db.Object(ctx, "max", itisadb.ObjectOptions{
+		Level: itisadb.DefaultLevel,
+	})
+
+	if res.Err() != nil {
+		t.Fatalf("Object: %v", res.Err())
 	}
 }

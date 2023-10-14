@@ -1,16 +1,16 @@
 package itisadb
 
 type Result[V any] struct {
-	value V
-	err   error
+	val V
+	err error
 }
 
-func (r Result[V]) Value() V {
-	return r.value
+func (r Result[V]) Val() V {
+	return r.val
 }
 
 func (r Result[V]) ValueAndErr() (V, error) {
-	return r.value, r.err
+	return r.val, r.err
 }
 
 func (r Result[V]) Err() error {

@@ -12,6 +12,7 @@ var (
 	ErrUnauthorized     = errors.New("unauthorized")
 	ErrObjectNotFound   = errors.New("object not found")
 	ErrUniqueConstraint = errors.New("unique constraint failed")
+	ErrPermissionDenied = errors.New("permission denied")
 )
 
 func convertGRPCError(err error) error {
@@ -31,6 +32,8 @@ func convertGRPCError(err error) error {
 		return ErrUniqueConstraint
 	case codes.Unauthenticated:
 		return ErrUnauthorized
+	case codes.PermissionDenied:
+		return ErrPermissionDenied
 	default:
 		return err
 	}

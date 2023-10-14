@@ -14,7 +14,7 @@ type DeleteOptions struct {
 	Server *int32
 }
 
-type Level int8
+type Level byte
 
 type ObjectOptions struct {
 	Server *int32
@@ -60,5 +60,5 @@ type DeleteKeyOptions struct {
 }
 
 type CreateUserOptions struct {
-	Level uint8
+	Level Level
 }

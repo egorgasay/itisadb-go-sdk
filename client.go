@@ -60,7 +60,7 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (*Client, error
 	var err error
 
 	config := defaultConfig
-	if len(conf) > 1 {
+	if len(conf) > 0 {
 		config = conf[0]
 	}
 
@@ -90,9 +90,21 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (*Client, error
 }
 
 // Object creates a new object.
-func (c *Client) Object(ctx context.Context, name string) Result[*Object] {
+func (c *Client) Object(ctx context.Context, name string, opts ...ObjectOptions) Result[*Object] {
+	opt := ObjectOptions{
+		Level: Level(api.Level_DEFAULT),
+	}
+
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+
 	_, err := c.cl.Object(withAuth(ctx), &api.ObjectRequest{
 		Name: name,
+		Options: &api.ObjectRequest_Options{
+			Server: opt.Server,
+			Level:  api.Level(opt.Level),
+		},
 	})
 
 	r := Result[*Object]{}
@@ -100,7 +112,7 @@ func (c *Client) Object(ctx context.Context, name string) Result[*Object] {
 	if err != nil {
 		r.err = convertGRPCError(err)
 	} else {
-		r.value = &Object{
+		r.val = &Object{
 			cl:   c.cl,
 			name: name,
 		}
@@ -118,7 +130,7 @@ func (c *Client) IsObject(ctx context.Context, name string) (res Result[bool]) {
 	if err != nil {
 		res.err = convertGRPCError(err)
 	} else {
-		res.value = r.Ok
+		res.val = r.Ok
 	}
 
 	return res

@@ -33,7 +33,7 @@ func (i *Object) Set(ctx context.Context, key, value string, opts ...SetToObject
 	if err != nil {
 		res.err = convertGRPCError(err)
 	} else {
-		res.value = true
+		res.val = true
 	}
 
 	return res
@@ -58,7 +58,7 @@ func (i *Object) Get(ctx context.Context, key string, opts ...GetFromObjectOptio
 	if err != nil {
 		res.err = convertGRPCError(err)
 	} else {
-		res.value = r.Value
+		res.val = r.Value
 	}
 
 	return res
@@ -86,7 +86,7 @@ func (i *Object) Object(ctx context.Context, name string, opts ...ObjectOptions)
 	if err != nil {
 		res.err = convertGRPCError(err)
 	} else {
-		res.value = &Object{
+		res.val = &Object{
 			name: name,
 			cl:   i.cl,
 		}
@@ -118,7 +118,7 @@ func (i *Object) JSON(ctx context.Context, opts ...ObjectToJSONOptions) (res Res
 	if err != nil {
 		res.err = convertGRPCError(err)
 	} else {
-		res.value = r.Object
+		res.val = r.Object
 	}
 
 	return res
@@ -142,7 +142,7 @@ func (i *Object) Size(ctx context.Context, opts ...SizeOptions) (res Result[uint
 	if err != nil {
 		res.err = convertGRPCError(err)
 	} else {
-		res.value = r.Size
+		res.val = r.Size
 	}
 
 	return
@@ -166,7 +166,7 @@ func (i *Object) DeleteObject(ctx context.Context, opts ...DeleteObjectOptions) 
 	if err != nil {
 		res.err = convertGRPCError(err)
 	} else {
-		res.value = true
+		res.val = true
 	}
 
 	return res
@@ -191,7 +191,7 @@ func (i *Object) Attach(ctx context.Context, name string, opts ...AttachToObject
 	if err != nil {
 		res.err = convertGRPCError(err)
 	} else {
-		res.value = true
+		res.val = true
 	}
 
 	return res
@@ -216,7 +216,7 @@ func (i *Object) DeleteKey(ctx context.Context, key string, opts ...DeleteKeyOpt
 	if err != nil {
 		res.err = convertGRPCError(err)
 	} else {
-		res.value = true
+		res.val = true
 	}
 
 	return res

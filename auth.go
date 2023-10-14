@@ -9,9 +9,9 @@ import (
 const token = "token"
 
 const (
-	LowLevel = iota + 1
-	MediumLevel
-	HighLevel
+	DefaultLevel Level = iota
+	RestrictedLevel
+	SecretLevel
 )
 
 var authMetadata = metadata.New(map[string]string{token: ""})
@@ -41,7 +41,7 @@ func (c *Client) CreateUser(ctx context.Context, login, password string, opts ..
 		return res
 	}
 
-	res.value = true
+	res.val = true
 	return res
 }
 
@@ -60,7 +60,7 @@ func (c *Client) DeleteUser(ctx context.Context, login string) (res Result[bool]
 		return res
 	}
 
-	res.value = true
+	res.val = true
 	return res
 }
 

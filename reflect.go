@@ -33,7 +33,7 @@ func (c *Client) structToObject(ctx context.Context, name string, structure any,
 	if res.Err() != nil {
 		return nil, res.Err()
 	}
-	object = res.Value()
+	object = res.Val()
 
 	// reflection is used to iterate over the struct
 	// and create the object
@@ -112,7 +112,7 @@ func (c *Client) objectToStruct(ctx context.Context, name string, obj reflect.Va
 		return res.Err()
 	}
 
-	object := res.Value()
+	object := res.Val()
 
 	if obj.Type().Kind() == reflect.Pointer {
 		obj = obj.Elem()

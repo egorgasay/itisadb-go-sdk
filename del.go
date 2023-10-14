@@ -14,7 +14,7 @@ func (c *Client) del(ctx context.Context, key string, opts DeleteOptions) (res R
 	if err != nil {
 		res.err = convertGRPCError(err)
 	} else {
-		res.value = true
+		res.val = true
 	}
 
 	return res

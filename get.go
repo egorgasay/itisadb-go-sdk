@@ -22,7 +22,7 @@ func (c *Client) get(ctx context.Context, key string, opts GetOptions) (res Resu
 	if err != nil {
 		res.err = convertGRPCError(err)
 	} else {
-		res.value = r.Value
+		res.val = r.Value
 	}
 
 	return res
