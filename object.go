@@ -24,9 +24,8 @@ func (i *Object) Set(ctx context.Context, key, value string, opts ...SetToObject
 		Value:  value,
 		Object: i.name,
 		Options: &api.SetToObjectRequest_Options{
-			Server:   opt.Server,
-			Uniques:  opt.Uniques,
-			ReadOnly: opt.ReadOnly,
+			Server:  opt.Server,
+			Uniques: opt.Uniques,
 		},
 	})
 

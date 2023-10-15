@@ -23,6 +23,7 @@ func TestSetGetOne(t *testing.T) {
 		return
 	}
 	ctx := context.TODO()
+
 	r := db.SetOne(ctx, "qwe", "111")
 	if r.Err() != nil {
 		t.Fatal(r.Err())
@@ -285,31 +286,32 @@ func TestDeleteAttr(t *testing.T) {
 	n := fmt.Sprint(num)
 	name := "TestDeleteAttr" + n
 
-	indx, err := db.Object(ctx, name).ValueAndErr()
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = indx.Set(ctx, "key_for_delete", "value_for_delete").Err()
+	obj, err := db.Object(ctx, name).ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = indx.Get(ctx, "key_for_delete").ValueAndErr()
+	err = obj.Set(ctx, "key_for_delete", "value_for_delete").Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = indx.DeleteKey(ctx, "key_for_delete").Err()
+	_, err = obj.Get(ctx, "key_for_delete").ValueAndErr()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	indx, err = db.Object(ctx, name).ValueAndErr()
+	err = obj.DeleteKey(ctx, "key_for_delete").Err()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = indx.Get(ctx, "key_for_delete").ValueAndErr()
+	obj, err = db.Object(ctx, name).ValueAndErr()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = obj.Get(ctx, "key_for_delete").ValueAndErr()
 	if !errors.Is(err, itisadb.ErrNotFound) {
 		t.Fatal("Key should be deleted")
 	}
@@ -317,7 +319,7 @@ func TestDeleteAttr(t *testing.T) {
 	// TEST DELETE ATTR INNER OBJECT
 
 	name = "inner_object"
-	inner, err := indx.Object(ctx, name).ValueAndErr()
+	inner, err := obj.Object(ctx, name).ValueAndErr()
 	if err != nil {
 		t.Fatalf("Inner object %v: %v", name, err)
 	}
@@ -337,7 +339,7 @@ func TestDeleteAttr(t *testing.T) {
 		t.Fatalf("Inner object %v: %v", name, err)
 	}
 
-	inner, err = indx.Object(ctx, name).ValueAndErr()
+	inner, err = obj.Object(ctx, name).ValueAndErr()
 	if err != nil {
 		t.Fatalf("Inner object %v: %v", name, err)
 	}

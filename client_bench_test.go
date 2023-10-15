@@ -105,7 +105,7 @@ func BenchmarkGetOneRPS(b *testing.B) {
 }
 
 // Test to define rps for Get.
-func BenchmarkGetFromDiskObjectRPS(b *testing.B) {
+func BenchmarkSetToObjectRPS(b *testing.B) {
 	db, err := itisadb.New(_ctx, ":800")
 	if err != nil {
 		log.Fatalln(err)
@@ -130,20 +130,34 @@ func BenchmarkGetFromDiskObjectRPS(b *testing.B) {
 }
 
 // Test to define rps for Get.
-func BenchmarkGetFromDiskObjectRPS2(b *testing.B) {
+func BenchmarkGetFromObjectRPS2(b *testing.B) {
 	db, err := itisadb.New(_ctx, ":8888")
 	if err != nil {
-		log.Fatalln(err)
+		b.Fatal(err)
 	}
 	const gnum = 1500000
-	const maxRPS = 10_000
+	const maxRPS = 80_000
 
 	b.Log("Total actions:", gnum)
 	b.Log("RPS:", maxRPS)
 
+	ctx := context.TODO()
+	ind, err := db.Object(ctx, "User").ValueAndErr()
+	if err != nil {
+		b.Log(err, "[User]")
+		return
+	}
+
 	var ints = make([]string, maxRPS)
 	for i := 0; i < maxRPS; i++ {
-		ints[i] = "User" + fmt.Sprint(i)
+		x := "User" + fmt.Sprint(i)
+		err := ind.Set(ctx, x, "xx").Err()
+		if err != nil {
+			b.Log(err)
+			return
+		}
+
+		ints[i] = x
 	}
 
 	b.Log("Hops:", gnum/maxRPS)
@@ -155,18 +169,67 @@ func BenchmarkGetFromDiskObjectRPS2(b *testing.B) {
 
 		var wgSent sync.WaitGroup
 		wgSent.Add(maxRPS)
-		ctx := context.TODO()
 		for i := 0; i < maxRPS; i++ {
 			wg.Done()
 			go func(i int) {
 				wg.Wait()
-				ind, err := db.Object(ctx, ints[i]).ValueAndErr()
+				_, err = ind.Get(ctx, ints[i]).ValueAndErr()
 				if err != nil {
-					b.Log(err, "["+ints[i]+"]")
+					b.Log(err)
 					return
 				}
+				wgSent.Done()
+			}(i)
 
-				_, err = ind.Get(ctx, "Email").ValueAndErr()
+		}
+		wg.Wait()
+		start := time.Now()
+		wgSent.Wait()
+		total += time.Since(start)
+		b.Log(time.Since(start))
+	}
+	b.Log(total)
+}
+
+func BenchmarkSetToObjectRPS2(b *testing.B) {
+	db, err := itisadb.New(_ctx, ":8888")
+	if err != nil {
+		b.Fatal(err)
+	}
+	const gnum = 1500000
+	const maxRPS = 80_000
+	const value = "xx"
+
+	b.Log("Total actions:", gnum)
+	b.Log("RPS:", maxRPS)
+
+	ctx := context.TODO()
+	ind, err := db.Object(ctx, "User").ValueAndErr()
+	if err != nil {
+		b.Log(err, "[User]")
+		return
+	}
+
+	var ints = make([]string, maxRPS)
+	for i := 0; i < maxRPS; i++ {
+		x := "User" + fmt.Sprint(i)
+		ints[i] = x
+	}
+
+	b.Log("Hops:", gnum/maxRPS)
+
+	var total time.Duration
+	for tt := gnum / maxRPS; tt > 0; tt-- {
+		var wg sync.WaitGroup
+		wg.Add(maxRPS)
+
+		var wgSent sync.WaitGroup
+		wgSent.Add(maxRPS)
+		for i := 0; i < maxRPS; i++ {
+			wg.Done()
+			go func(i int) {
+				wg.Wait()
+				_, err = ind.Set(ctx, ints[i], value).ValueAndErr()
 				if err != nil {
 					b.Log(err)
 					return

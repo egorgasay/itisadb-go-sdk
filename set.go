@@ -15,9 +15,8 @@ func (c *Client) set(ctx context.Context, key, val string, opt SetOptions) (res 
 		Key:   key,
 		Value: val,
 		Options: &api.SetRequest_Options{
-			Server:   opt.Server,
-			Uniques:  opt.Uniques,
-			ReadOnly: opt.ReadOnly,
+			Server:  opt.Server,
+			Uniques: opt.Uniques,
 		},
 	})
 
