@@ -87,9 +87,9 @@ func (c *Client) structToObject(ctx context.Context, name string, structure any,
 // Supported field types: Strings, Ints, Uints, Pointers to structs, Structs, Booleans, Floats.
 //
 // DO NOT USE CYCLIC STRUCTURES.
-func (c *Client) ObjectToStruct(ctx context.Context, name string, obj any) error {
+func (c *Client) ObjectToStruct(ctx context.Context, name string, data any) error {
 	// checks if it is a struct
-	objValue := reflect.ValueOf(obj)
+	objValue := reflect.ValueOf(data)
 
 	objType := objValue.Type().Kind()
 
