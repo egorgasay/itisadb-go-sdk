@@ -1,26 +1,25 @@
 package itisadb
 
 import (
+	"github.com/egorgasay/gost"
 	"github.com/egorgasay/itisadb-go-sdk/api"
 	"golang.org/x/net/context"
 )
 
-func (c *Client) del(ctx context.Context, key string, opts DeleteOptions) (res Result[bool]) {
+func (c *Client) del(ctx context.Context, key string, opts DeleteOptions) (res gost.Result[gost.Nothing]) {
 	_, err := c.cl.Delete(withAuth(ctx), &api.DeleteRequest{
 		Key:     key,
 		Options: &api.DeleteRequest_Options{Server: opts.Server},
 	})
 
 	if err != nil {
-		res.err = convertGRPCError(err)
-	} else {
-		res.val = true
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return res
+	return res.Ok(gost.Nothing{})
 }
 
-func (c *Client) Del(ctx context.Context, key string, opts ...DeleteOptions) Result[bool] {
+func (c *Client) DelOne(ctx context.Context, key string, opts ...DeleteOptions) gost.Result[gost.Nothing] {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 

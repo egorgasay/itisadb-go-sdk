@@ -3,6 +3,7 @@ package itisadb
 import (
 	"context"
 	"fmt"
+	"github.com/egorgasay/gost"
 	"github.com/egorgasay/itisadb-go-sdk/api"
 	"sync"
 
@@ -55,7 +56,7 @@ var defaultConfig = Config{
 	},
 }
 
-func New(ctx context.Context, balancerIP string, conf ...Config) (*Client, error) {
+func New(ctx context.Context, balancerIP string, conf ...Config) (res gost.Result[*Client]) {
 	var conn *grpc.ClientConn
 	var err error
 
@@ -66,7 +67,7 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (*Client, error
 
 	conn, err = grpc.Dial(balancerIP, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return nil, err
+		return res.Err(gost.NewError(0, 0, err.Error()))
 	}
 
 	client := api.NewItisaDBClient(conn)
@@ -77,20 +78,20 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (*Client, error
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to authenticate: %w", err)
+		return res.Err(gost.NewError(0, 0, fmt.Sprintf("failed to authenticate: %s", err)))
 	}
 
 	authMetadata.Set(token, resp.Token)
 
-	return &Client{
+	return res.Ok(&Client{
 		keysAndServers: make(map[string]int32, 100),
 		cl:             client,
 		token:          resp.Token,
-	}, nil
+	})
 }
 
 // Object creates a new object.
-func (c *Client) Object(ctx context.Context, name string, opts ...ObjectOptions) Result[*Object] {
+func (c *Client) Object(ctx context.Context, name string, opts ...ObjectOptions) (res gost.Result[*Object]) {
 	opt := ObjectOptions{
 		Level: Level(api.Level_DEFAULT),
 	}
@@ -107,33 +108,27 @@ func (c *Client) Object(ctx context.Context, name string, opts ...ObjectOptions)
 		},
 	})
 
-	r := Result[*Object]{}
-
 	if err != nil {
-		r.err = convertGRPCError(err)
-	} else {
-		r.val = &Object{
-			cl:   c.cl,
-			name: name,
-		}
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return r
+	return res.Ok(&Object{
+		cl:   c.cl,
+		name: name,
+	})
 }
 
 // IsObject checks if it is an object or not.
-func (c *Client) IsObject(ctx context.Context, name string) (res Result[bool]) {
+func (c *Client) IsObject(ctx context.Context, name string) (res gost.Result[bool]) {
 	r, err := c.cl.IsObject(withAuth(ctx), &api.IsObjectRequest{
 		Name: name,
 	})
 
 	if err != nil {
-		res.err = convertGRPCError(err)
-	} else {
-		res.val = r.Ok
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return res
+	return res.Ok(r.Ok)
 }
 
 func ToServerNumber(x int) *int32 {

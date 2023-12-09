@@ -3,6 +3,7 @@ package itisadb
 import (
 	"context"
 	"fmt"
+	"github.com/egorgasay/gost"
 	"github.com/egorgasay/itisadb-go-sdk/api"
 )
 
@@ -12,14 +13,14 @@ type Object struct {
 }
 
 // Set sets the value for the key in the specified object.
-func (i *Object) Set(ctx context.Context, key, value string, opts ...SetToObjectOptions) (res Result[bool]) {
+func (i *Object) Set(ctx context.Context, key, value string, opts ...SetToObjectOptions) (res gost.Result[int32]) {
 	opt := SetToObjectOptions{}
 
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 
-	_, err := i.cl.SetToObject(withAuth(ctx), &api.SetToObjectRequest{
+	r, err := i.cl.SetToObject(withAuth(ctx), &api.SetToObjectRequest{
 		Key:    key,
 		Value:  value,
 		Object: i.name,
@@ -30,16 +31,14 @@ func (i *Object) Set(ctx context.Context, key, value string, opts ...SetToObject
 	})
 
 	if err != nil {
-		res.err = convertGRPCError(err)
-	} else {
-		res.val = true
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return res
+	return res.Ok(r.SavedTo)
 }
 
 // Get gets the value for the key from the specified object.
-func (i *Object) Get(ctx context.Context, key string, opts ...GetFromObjectOptions) (res Result[string]) {
+func (i *Object) Get(ctx context.Context, key string, opts ...GetFromObjectOptions) (res gost.Result[string]) {
 	opt := GetFromObjectOptions{}
 
 	if len(opts) > 0 {
@@ -55,16 +54,14 @@ func (i *Object) Get(ctx context.Context, key string, opts ...GetFromObjectOptio
 	})
 
 	if err != nil {
-		res.err = convertGRPCError(err)
-	} else {
-		res.val = r.Value
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return res
+	return res.Ok(r.Value)
 }
 
 // Object returns a new or an existing object.
-func (i *Object) Object(ctx context.Context, name string, opts ...ObjectOptions) (res Result[*Object]) {
+func (i *Object) Object(ctx context.Context, name string, opts ...ObjectOptions) (res gost.Result[*Object]) {
 	opt := ObjectOptions{
 		Level: Level(api.Level_DEFAULT),
 	}
@@ -83,24 +80,22 @@ func (i *Object) Object(ctx context.Context, name string, opts ...ObjectOptions)
 	})
 
 	if err != nil {
-		res.err = convertGRPCError(err)
-	} else {
-		res.val = &Object{
-			name: name,
-			cl:   i.cl,
-		}
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return res
+	return res.Ok(&Object{
+		name: name,
+		cl:   i.cl,
+	})
 }
 
-// GetName returns the name of the object.
-func (i *Object) GetName() string {
+// Name returns the name of the object.
+func (i *Object) Name() string {
 	return i.name
 }
 
 // JSON returns the object in JSON.
-func (i *Object) JSON(ctx context.Context, opts ...ObjectToJSONOptions) (res Result[string]) {
+func (i *Object) JSON(ctx context.Context, opts ...ObjectToJSONOptions) (res gost.Result[string]) {
 	opt := ObjectToJSONOptions{}
 
 	if len(opts) > 0 {
@@ -115,16 +110,14 @@ func (i *Object) JSON(ctx context.Context, opts ...ObjectToJSONOptions) (res Res
 	})
 
 	if err != nil {
-		res.err = convertGRPCError(err)
-	} else {
-		res.val = r.Object
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return res
+	return res.Ok(r.Object)
 }
 
 // Size returns  the size of the object.
-func (i *Object) Size(ctx context.Context, opts ...SizeOptions) (res Result[uint64]) {
+func (i *Object) Size(ctx context.Context, opts ...SizeOptions) (res gost.Result[uint64]) {
 	opt := SizeOptions{}
 
 	if len(opts) > 0 {
@@ -139,16 +132,14 @@ func (i *Object) Size(ctx context.Context, opts ...SizeOptions) (res Result[uint
 	})
 
 	if err != nil {
-		res.err = convertGRPCError(err)
-	} else {
-		res.val = r.Size
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return
+	return res.Ok(r.Size)
 }
 
 // DeleteObject deletes the object.
-func (i *Object) DeleteObject(ctx context.Context, opts ...DeleteObjectOptions) (res Result[bool]) {
+func (i *Object) DeleteObject(ctx context.Context, opts ...DeleteObjectOptions) (res gost.Result[gost.Nothing]) {
 	opt := DeleteObjectOptions{}
 
 	if len(opts) > 0 {
@@ -163,16 +154,14 @@ func (i *Object) DeleteObject(ctx context.Context, opts ...DeleteObjectOptions) 
 	})
 
 	if err != nil {
-		res.err = convertGRPCError(err)
-	} else {
-		res.val = true
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return res
+	return res.Ok(gost.Nothing{})
 }
 
 // Attach attaches the object to another object.
-func (i *Object) Attach(ctx context.Context, name string, opts ...AttachToObjectOptions) (res Result[bool]) {
+func (i *Object) Attach(ctx context.Context, name string, opts ...AttachToObjectOptions) (res gost.Result[gost.Nothing]) {
 	opt := AttachToObjectOptions{}
 
 	if len(opts) > 0 {
@@ -188,16 +177,14 @@ func (i *Object) Attach(ctx context.Context, name string, opts ...AttachToObject
 	})
 
 	if err != nil {
-		res.err = convertGRPCError(err)
-	} else {
-		res.val = true
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return res
+	return res.Ok(gost.Nothing{})
 }
 
 // DeleteKey deletes the attribute from the object.
-func (i *Object) DeleteKey(ctx context.Context, key string, opts ...DeleteKeyOptions) (res Result[bool]) {
+func (i *Object) DeleteKey(ctx context.Context, key string, opts ...DeleteKeyOptions) (res gost.Result[gost.Nothing]) {
 	opt := DeleteKeyOptions{}
 
 	if len(opts) > 0 {
@@ -213,10 +200,8 @@ func (i *Object) DeleteKey(ctx context.Context, key string, opts ...DeleteKeyOpt
 	})
 
 	if err != nil {
-		res.err = convertGRPCError(err)
-	} else {
-		res.val = true
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return res
+	return res.Ok(gost.Nothing{})
 }

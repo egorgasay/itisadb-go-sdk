@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/egorgasay/itisadb-go-sdk"
-	"log"
 	"sync"
 	"testing"
 	"time"
@@ -12,10 +11,8 @@ import (
 
 // Test to define rps for SetOne.
 func TestSetOneRPS(b *testing.T) {
-	db, err := itisadb.New(_ctx, ":8888")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	db := itisadb.New(_ctx, ":8888").Unwrap()
+
 	const maxRPS = 100_000
 	const gnum = maxRPS * 10
 
@@ -41,7 +38,7 @@ func TestSetOneRPS(b *testing.T) {
 			wg.Done()
 			go func(i int) {
 				wg.Wait()
-				err := db.SetOne(ctx, ints[i], "qdw").Err()
+				err := db.SetOne(ctx, ints[i], "qdw").Error()
 				if err != nil {
 					b.Log(err)
 				}
@@ -59,10 +56,7 @@ func TestSetOneRPS(b *testing.T) {
 
 // Test to define rps for Get.
 func BenchmarkGetOneRPS(b *testing.B) {
-	db, err := itisadb.New(_ctx, ":8888")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	db := itisadb.New(_ctx, ":8888").Unwrap()
 	const maxRPS = 71_100
 	const gnum = maxRPS * 10
 
@@ -87,7 +81,7 @@ func BenchmarkGetOneRPS(b *testing.B) {
 		for i := 0; i < maxRPS; i++ {
 			go func(i int) {
 				wg.Wait()
-				_, err := db.GetOne(ctx, ints[i]).ValueAndErr()
+				err := db.GetOne(ctx, ints[i]).Error()
 				if err != nil {
 					b.Log(err)
 				}
@@ -106,23 +100,14 @@ func BenchmarkGetOneRPS(b *testing.B) {
 
 // Test to define rps for Get.
 func BenchmarkSetToObjectRPS(b *testing.B) {
-	db, err := itisadb.New(_ctx, ":800")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	db := itisadb.New(_ctx, ":800").Unwrap()
 
 	ctx := context.Background()
-	ind, err := db.Object(ctx, "User1").ValueAndErr()
-	if err != nil {
-		log.Fatalln(err)
-	}
+	ind := db.Object(ctx, "User1").Unwrap()
 
 	start := time.Now()
-	mail, err := ind.Get(ctx, "Email").ValueAndErr()
+	mail := ind.Get(ctx, "Email").Unwrap()
 	b.Log(time.Since(start))
-	if err != nil {
-		log.Fatalln(err)
-	}
 
 	if mail != "max@mail.ru" {
 		b.Error("Wrong email")
@@ -131,10 +116,8 @@ func BenchmarkSetToObjectRPS(b *testing.B) {
 
 // Test to define rps for Get.
 func BenchmarkGetFromObjectRPS2(b *testing.B) {
-	db, err := itisadb.New(_ctx, ":8888")
-	if err != nil {
-		b.Fatal(err)
-	}
+	db := itisadb.New(_ctx, ":8888").Unwrap()
+
 	const gnum = 1500000
 	const maxRPS = 80_000
 
@@ -142,16 +125,17 @@ func BenchmarkGetFromObjectRPS2(b *testing.B) {
 	b.Log("RPS:", maxRPS)
 
 	ctx := context.TODO()
-	ind, err := db.Object(ctx, "User").ValueAndErr()
-	if err != nil {
-		b.Log(err, "[User]")
+	res := db.Object(ctx, "User")
+	if res.IsErr() {
+		b.Log(res.Error(), "[User]")
 		return
 	}
+	ind := res.Unwrap()
 
 	var ints = make([]string, maxRPS)
 	for i := 0; i < maxRPS; i++ {
 		x := "User" + fmt.Sprint(i)
-		err := ind.Set(ctx, x, "xx").Err()
+		err := ind.Set(ctx, x, "xx").Error()
 		if err != nil {
 			b.Log(err)
 			return
@@ -173,7 +157,7 @@ func BenchmarkGetFromObjectRPS2(b *testing.B) {
 			wg.Done()
 			go func(i int) {
 				wg.Wait()
-				_, err = ind.Get(ctx, ints[i]).ValueAndErr()
+				err := ind.Get(ctx, ints[i]).Error()
 				if err != nil {
 					b.Log(err)
 					return
@@ -192,10 +176,8 @@ func BenchmarkGetFromObjectRPS2(b *testing.B) {
 }
 
 func BenchmarkSetToObjectRPS2(b *testing.B) {
-	db, err := itisadb.New(_ctx, ":8888")
-	if err != nil {
-		b.Fatal(err)
-	}
+	db := itisadb.New(_ctx, ":8888").Unwrap()
+
 	const gnum = 1500000
 	const maxRPS = 80_000
 	const value = "xx"
@@ -204,11 +186,7 @@ func BenchmarkSetToObjectRPS2(b *testing.B) {
 	b.Log("RPS:", maxRPS)
 
 	ctx := context.TODO()
-	ind, err := db.Object(ctx, "User").ValueAndErr()
-	if err != nil {
-		b.Log(err, "[User]")
-		return
-	}
+	ind := db.Object(ctx, "User").Unwrap()
 
 	var ints = make([]string, maxRPS)
 	for i := 0; i < maxRPS; i++ {
@@ -229,11 +207,7 @@ func BenchmarkSetToObjectRPS2(b *testing.B) {
 			wg.Done()
 			go func(i int) {
 				wg.Wait()
-				_, err = ind.Set(ctx, ints[i], value).ValueAndErr()
-				if err != nil {
-					b.Log(err)
-					return
-				}
+				_ = ind.Set(ctx, ints[i], value).Unwrap()
 				wgSent.Done()
 			}(i)
 

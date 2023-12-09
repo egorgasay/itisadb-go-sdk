@@ -2,7 +2,7 @@ package itisadb
 
 import (
 	"context"
-	"fmt"
+	"github.com/egorgasay/gost"
 	"github.com/egorgasay/itisadb-go-sdk/api"
 )
 
@@ -11,7 +11,7 @@ const (
 	getFromDisk
 )
 
-func (c *Client) get(ctx context.Context, key string, opts GetOptions) (res Result[string]) {
+func (c *Client) get(ctx context.Context, key string, opts GetOptions) (res gost.Result[string]) {
 	r, err := c.cl.Get(withAuth(ctx), &api.GetRequest{
 		Key: key,
 		Options: &api.GetRequest_Options{
@@ -20,16 +20,14 @@ func (c *Client) get(ctx context.Context, key string, opts GetOptions) (res Resu
 	})
 
 	if err != nil {
-		res.err = convertGRPCError(err)
-	} else {
-		res.val = r.Value
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return res
+	return res.Ok(r.Value)
 }
 
 // GetOne gets the value by the key from gRPCis.
-func (c *Client) GetOne(ctx context.Context, key string, opts ...GetOptions) (res Result[string]) {
+func (c *Client) GetOne(ctx context.Context, key string, opts ...GetOptions) (res gost.Result[string]) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -49,13 +47,12 @@ func (c *Client) GetOne(ctx context.Context, key string, opts ...GetOptions) (re
 }
 
 // GetMany gets a lot of values from gRPCis.
-func (c *Client) GetMany(ctx context.Context, keys []string, opts ...GetOptions) (map[string]string, error) {
+func (c *Client) GetMany(ctx context.Context, keys []string, opts ...GetOptions) (res gost.Result[map[string]string]) {
 	if ctx.Err() != nil {
-		return nil, ctx.Err()
+		return res.Err(gost.NewError(0, 0, ctx.Err().Error()))
 	}
 
 	var keyValue = make(map[string]string, 10)
-	var err error
 
 	opt := GetOptions{}
 
@@ -64,29 +61,32 @@ func (c *Client) GetMany(ctx context.Context, keys []string, opts ...GetOptions)
 	}
 
 	for _, key := range keys {
-		keyValue[key], err = c.GetOne(ctx, key, opt).ValueAndErr()
-		if err != nil {
-			return nil, fmt.Errorf("get %s: %w", key, err)
+		switch r := c.GetOne(ctx, key, opt); r.Switch() {
+		case gost.IsOk:
+			keyValue[key] = r.Unwrap()
+		case gost.IsErr:
+			return res.Err(r.Error())
 		}
 	}
-	return keyValue, nil
+	return res.Ok(keyValue)
 }
 
 // GetManyOpts gets a lot of values from gRPCis with opts.
-func (c *Client) GetManyOpts(ctx context.Context, keys []Key) (map[string]string, error) {
+func (c *Client) GetManyOpts(ctx context.Context, keys []Key) (res gost.Result[map[string]string]) {
 	if ctx.Err() != nil {
-		return nil, ctx.Err()
+		return res.Err(gost.NewError(0, 0, ctx.Err().Error()))
 	}
 
 	var keyValue = make(map[string]string, 10)
-	var err error
 
 	for _, key := range keys {
-		keyValue[key.Key], err = c.get(ctx, key.Key, key.Options).ValueAndErr()
-		if err != nil {
-			return nil, err
+		switch r := c.get(ctx, key.Key, key.Options); r.Switch() {
+		case gost.IsOk:
+			keyValue[key.Key] = r.Unwrap()
+		case gost.IsErr:
+			return res.Err(r.Error())
 		}
 	}
 
-	return keyValue, nil
+	return res.Ok(keyValue)
 }

@@ -2,6 +2,7 @@ package itisadb
 
 import (
 	"context"
+	"github.com/egorgasay/gost"
 	"github.com/egorgasay/itisadb-go-sdk/api"
 	"google.golang.org/grpc/metadata"
 )
@@ -14,13 +15,14 @@ const (
 	SecretLevel
 )
 
+// TODO: refactor
 var authMetadata = metadata.New(map[string]string{token: ""})
 
 func withAuth(ctx context.Context) context.Context {
 	return metadata.NewOutgoingContext(ctx, authMetadata)
 }
 
-func (c *Client) CreateUser(ctx context.Context, login, password string, opts ...CreateUserOptions) (res Result[bool]) {
+func (c *Client) CreateUser(ctx context.Context, login, password string, opts ...CreateUserOptions) (res gost.Result[gost.Nothing]) {
 	opt := CreateUserOptions{}
 
 	if len(opts) > 0 {
@@ -32,36 +34,32 @@ func (c *Client) CreateUser(ctx context.Context, login, password string, opts ..
 	})
 
 	if err != nil {
-		err := convertGRPCError(err)
+		err := errFromGRPCError(err)
 		if err == ErrUniqueConstraint {
 			return res
 		}
 
-		res.err = err
-		return res
+		return res.Err(err)
 	}
 
-	res.val = true
-	return res
+	return res.Ok(gost.Nothing{})
 }
 
-func (c *Client) DeleteUser(ctx context.Context, login string) (res Result[bool]) {
+func (c *Client) DeleteUser(ctx context.Context, login string) (res gost.Result[bool]) {
 	_, err := c.cl.DeleteUser(withAuth(ctx), &api.DeleteUserRequest{
 		Login: login,
 	})
 
 	if err != nil {
-		err := convertGRPCError(err)
+		err := errFromGRPCError(err)
 		if err == ErrNotFound {
 			return res
 		}
 
-		res.err = err
-		return res
+		return res.Err(err)
 	}
 
-	res.val = true
-	return res
+	return res.Ok(true)
 }
 
 func (c *Client) ChangePassword(ctx context.Context, login, newPassword string) error {
@@ -71,7 +69,7 @@ func (c *Client) ChangePassword(ctx context.Context, login, newPassword string) 
 	})
 
 	if err != nil {
-		return convertGRPCError(err)
+		return errFromGRPCError(err)
 	}
 
 	return nil
@@ -84,7 +82,7 @@ func (c *Client) ChangeLevel(ctx context.Context, login string, level Level) err
 	})
 
 	if err != nil {
-		return convertGRPCError(err)
+		return errFromGRPCError(err)
 	}
 
 	return nil

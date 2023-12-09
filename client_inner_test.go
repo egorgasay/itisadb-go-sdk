@@ -8,10 +8,7 @@ import (
 
 func TestAuth(t *testing.T) {
 	ctx := context.Background()
-	cl, err := New(ctx, ":8888")
-	if err != nil {
-		t.Fatalf("New: %v", err)
-	}
+	cl := New(ctx, ":8888").Unwrap()
 
 	// method that requires auth
 	resp, err := cl.cl.Servers(withAuth(ctx), &api.ServersRequest{})
@@ -25,27 +22,21 @@ func TestAuth(t *testing.T) {
 
 // TestSetToGetFrom to run this test, itisadb must be run on :8888.
 func TestSetToGetFrom(t *testing.T) {
-	db, err := New(context.TODO(), ":8888")
-	if err != nil {
-		return
-	}
+	db := New(context.TODO(), ":8888").Unwrap()
 
 	var snum int32 = 1
 
 	ctx := context.TODO()
-	err = db.set(ctx, "fff", "qqq", SetOptions{
+	err := db.set(ctx, "fff", "qqq", SetOptions{
 		Server:   &snum,
 		Uniques:  false,
 		ReadOnly: false,
-	}).Err()
+	}).Error()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	get, err := db.get(ctx, "fff", GetOptions{Server: &snum}).ValueAndErr()
-	if err != nil {
-		t.Fatal(err)
-	}
+	get := db.get(ctx, "fff", GetOptions{Server: &snum}).Unwrap()
 
 	if get != "qqq" {
 		t.Fatal("Wrong value")

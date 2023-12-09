@@ -1,24 +1,32 @@
 package itisadb
 
 import (
-	"errors"
+	"fmt"
+	"github.com/egorgasay/gost"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 var (
-	ErrNotFound         = errors.New("not found")
-	ErrUnavailable      = errors.New("storage is unavailable")
-	ErrUnauthorized     = errors.New("unauthorized")
-	ErrObjectNotFound   = errors.New("object not found")
-	ErrUniqueConstraint = errors.New("unique constraint failed")
-	ErrPermissionDenied = errors.New("permission denied")
+	ErrNotFound         = gost.NewError(0, 0, "not found")
+	ErrUnavailable      = gost.NewError(0, 0, "storage is unavailable")
+	ErrUnauthorized     = gost.NewError(0, 0, "unauthorized")
+	ErrObjectNotFound   = gost.NewError(0, 0, "object not found")
+	ErrUniqueConstraint = gost.NewError(0, 0, "unique constraint failed")
+	ErrPermissionDenied = gost.NewError(0, 0, "permission denied")
 )
 
-func convertGRPCError(err error) error {
+func errFromGRPCError(err error) *gost.Error {
+	if err == nil {
+		return nil
+	}
+
 	st, ok := status.FromError(err)
 	if !ok {
-		return err
+		return gost.NewError(
+			0, 0,
+			fmt.Sprintf("unknown error: %s\n", err.Error()),
+		)
 	}
 
 	switch st.Code() {
@@ -35,6 +43,9 @@ func convertGRPCError(err error) error {
 	case codes.PermissionDenied:
 		return ErrPermissionDenied
 	default:
-		return err
+		return gost.NewError(
+			0, 0,
+			fmt.Sprintf("unknown error: %s\n", st.Message()),
+		)
 	}
 }

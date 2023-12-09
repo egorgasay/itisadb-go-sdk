@@ -2,6 +2,7 @@ package itisadb
 
 import (
 	"context"
+	"github.com/egorgasay/gost"
 	"github.com/egorgasay/itisadb-go-sdk/api"
 )
 
@@ -10,7 +11,7 @@ var (
 	setToAll   int32 = -1
 )
 
-func (c *Client) set(ctx context.Context, key, val string, opt SetOptions) (res Result[int32]) {
+func (c *Client) set(ctx context.Context, key, val string, opt SetOptions) (res gost.Result[int32]) {
 	r, err := c.cl.Set(withAuth(ctx), &api.SetRequest{
 		Key:   key,
 		Value: val,
@@ -21,35 +22,34 @@ func (c *Client) set(ctx context.Context, key, val string, opt SetOptions) (res 
 	})
 
 	if err != nil {
-		res.err = convertGRPCError(err)
-	} else {
-		res.val = r.SavedTo
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return res
+	return res.Ok(r.SavedTo)
 }
 
 // SetOne sets the val for the key to gRPCis.
-func (c *Client) SetOne(ctx context.Context, key, val string, opts ...SetOptions) Result[bool] {
+func (c *Client) SetOne(ctx context.Context, key, val string, opts ...SetOptions) (res gost.Result[int32]) {
 	opt := SetOptions{}
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 
-	server, err := c.set(ctx, key, val, opt).ValueAndErr()
-	if err != nil {
-		return Result[bool]{err: err}
+	r := c.set(ctx, key, val, opt)
+	if r.IsErr() {
+		return r
 	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	server := r.Unwrap()
 	c.keysAndServers[key] = server
-	return Result[bool]{val: true}
+	return res
 }
 
 // SetToAll sets the val for the key on all servers.
-func (c *Client) SetToAll(ctx context.Context, key, val string, opts ...SetOptions) Result[bool] {
+func (c *Client) SetToAll(ctx context.Context, key, val string, opts ...SetOptions) (res gost.Result[gost.Nothing]) {
 	opt := SetOptions{
 		Server: &setToAll,
 	}
@@ -59,15 +59,15 @@ func (c *Client) SetToAll(ctx context.Context, key, val string, opts ...SetOptio
 	}
 
 	r := c.set(ctx, key, val, opt)
-	if r.Err() != nil {
-		return Result[bool]{err: convertGRPCError(r.Err())}
+	if r.IsErr() {
+		return res.Err(r.Error())
 	}
 
-	return Result[bool]{val: true}
+	return res.Ok(gost.Nothing{})
 }
 
 // SetMany sets a set of vals for gRPCis.
-func (c *Client) SetMany(ctx context.Context, kv map[string]string, opts ...SetOptions) Result[bool] {
+func (c *Client) SetMany(ctx context.Context, kv map[string]string, opts ...SetOptions) (res gost.Result[gost.Nothing]) {
 	opt := SetOptions{}
 
 	if len(opts) > 0 {
@@ -75,21 +75,21 @@ func (c *Client) SetMany(ctx context.Context, kv map[string]string, opts ...SetO
 	}
 
 	for key, val := range kv {
-		err := c.set(ctx, key, val, opt).Err()
-		if err != nil {
-			return Result[bool]{err: convertGRPCError(err)}
+		r := c.set(ctx, key, val, opt)
+		if r.IsErr() {
+			return res.Err(r.Error())
 		}
 	}
-	return Result[bool]{val: true}
+	return res.Ok(gost.Nothing{})
 }
 
 // SetManyOpts gets a lot of vals from gRPCis with opts.
-func (c *Client) SetManyOpts(ctx context.Context, keyValue map[string]Value) Result[bool] {
+func (c *Client) SetManyOpts(ctx context.Context, keyValue map[string]Value) (res gost.Result[gost.Nothing]) {
 	for key, val := range keyValue {
-		err := c.set(ctx, key, val.Value, val.Options).Err()
-		if err != nil {
-			return Result[bool]{err: convertGRPCError(err)}
+		r := c.set(ctx, key, val.Value, val.Options)
+		if r.IsErr() {
+			return res.Err(r.Error())
 		}
 	}
-	return Result[bool]{val: true}
+	return res.Ok(gost.Nothing{})
 }
