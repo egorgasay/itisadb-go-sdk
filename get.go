@@ -2,103 +2,86 @@ package itisadb
 
 import (
 	"context"
-	"errors"
-	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"github.com/egorgasay/gost"
+	api "github.com/egorgasay/itisadb-shared-proto/go"
 )
 
-const (
-	_ = -iota
-	getFromDisk
-)
-
-var ErrNotFound = errors.New("not found")
-
-func (c *Client) get(ctx context.Context, key string, server int32) (string, error) {
-	res, err := c.cl.Get(ctx, &balancer.BalancerGetRequest{
-		Key:    key,
-		Server: server,
+func (c *Client) get(ctx context.Context, key string, opts GetOptions) (res gost.Result[string]) {
+	r, err := c.cl.Get(withAuth(ctx), &api.GetRequest{
+		Key: key,
+		Options: &api.GetRequest_Options{
+			Server: opts.Server,
+		},
 	})
 
 	if err != nil {
-		st, ok := status.FromError(err)
-		if !ok {
-			return "", err
-		}
-
-		if st.Code() == codes.NotFound {
-			return "", ErrNotFound
-		}
-
-		if st.Code() == codes.Unavailable {
-			return "", ErrUnavailable
-		}
-
-		return "", err
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return res.Value, nil
+	return res.Ok(r.Value)
 }
 
-// Get gets the value by the key from gRPCis.
-func (c *Client) Get(ctx context.Context, key string) (string, error) {
-	if ctx.Err() != nil {
-		return "", ctx.Err()
-	}
-
+// GetOne gets the value by the key from gRPCis.
+func (c *Client) GetOne(ctx context.Context, key string, opts ...GetOptions) (res gost.Result[string]) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	return c.get(ctx, key, c.keysAndServers[key])
-}
 
-// GetFrom gets the value by key from the specified server.
-func (c *Client) GetFrom(ctx context.Context, key string, server int32) (string, error) {
-	if ctx.Err() != nil {
-		return "", ctx.Err()
+	opt := GetOptions{}
+
+	if len(opts) > 0 {
+		opt = opts[0]
 	}
 
-	return c.get(ctx, key, server)
-}
+	if opt.Server != nil {
+		if s, ok := c.keysAndServers[key]; ok {
+			opt.Server = &s
+		}
+	}
 
-// GetFromDisk gets the value by key from the physical database.
-func (c *Client) GetFromDisk(ctx context.Context, key string) (string, error) {
-	return c.get(ctx, key, getFromDisk)
+	return c.get(ctx, key, opt)
 }
 
 // GetMany gets a lot of values from gRPCis.
-func (c *Client) GetMany(ctx context.Context, keys []string) (map[string]string, error) {
+func (c *Client) GetMany(ctx context.Context, keys []string, opts ...GetOptions) (res gost.Result[map[string]string]) {
 	if ctx.Err() != nil {
-		return nil, ctx.Err()
+		return res.Err(gost.NewError(0, 0, ctx.Err().Error()))
 	}
 
 	var keyValue = make(map[string]string, 10)
-	var err error
+
+	opt := GetOptions{}
+
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
 
 	for _, key := range keys {
-		keyValue[key], err = c.get(ctx, key, 0)
-		if err != nil {
-			return nil, err
+		switch r := c.GetOne(ctx, key, opt); r.Switch() {
+		case gost.IsOk:
+			keyValue[key] = r.Unwrap()
+		case gost.IsErr:
+			return res.Err(r.Error())
 		}
 	}
-	return keyValue, nil
+	return res.Ok(keyValue)
 }
 
 // GetManyOpts gets a lot of values from gRPCis with opts.
-func (c *Client) GetManyOpts(ctx context.Context, keys []Key) (map[string]string, error) {
+func (c *Client) GetManyOpts(ctx context.Context, keys []Key) (res gost.Result[map[string]string]) {
 	if ctx.Err() != nil {
-		return nil, ctx.Err()
+		return res.Err(gost.NewError(0, 0, ctx.Err().Error()))
 	}
 
 	var keyValue = make(map[string]string, 10)
-	var err error
 
 	for _, key := range keys {
-		keyValue[key.Key], err = c.get(ctx, key.Key, key.Opts.Server)
-		if err != nil {
-			return nil, err
+		switch r := c.get(ctx, key.Key, key.Options); r.Switch() {
+		case gost.IsOk:
+			keyValue[key.Key] = r.Unwrap()
+		case gost.IsErr:
+			return res.Err(r.Error())
 		}
 	}
 
-	return keyValue, nil
+	return res.Ok(keyValue)
 }

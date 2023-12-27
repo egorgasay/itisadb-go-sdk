@@ -2,105 +2,94 @@ package itisadb
 
 import (
 	"context"
-	"errors"
-	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"github.com/egorgasay/gost"
+	api "github.com/egorgasay/itisadb-shared-proto/go"
 )
 
-const (
-	setDefault = -iota
-	setToDisk
-	setToAll
-	setToAllAndToDisk
+var (
+	setDefault int32 = 0
+	setToAll   int32 = -1
 )
 
-var ErrUniqueConstraint = errors.New("unique constraint failed")
-
-func (c *Client) set(ctx context.Context, key, value string, server int32, uniques bool) (int32, error) {
-	res, err := c.cl.Set(ctx, &balancer.BalancerSetRequest{
-		Key:     key,
-		Value:   value,
-		Server:  server,
-		Uniques: uniques,
+func (c *Client) set(ctx context.Context, key, val string, opt SetOptions) (res gost.Result[int32]) {
+	r, err := c.cl.Set(withAuth(ctx), &api.SetRequest{
+		Key:   key,
+		Value: val,
+		Options: &api.SetRequest_Options{
+			Server:   opt.Server,
+			ReadOnly: opt.ReadOnly,
+		},
 	})
 
 	if err != nil {
-		st, ok := status.FromError(err)
-		if !ok {
-			return 0, err
-		}
-
-		if st.Code() == codes.AlreadyExists {
-			return 0, ErrUniqueConstraint
-		}
-
-		if st.Code() == codes.Unavailable {
-			return 0, ErrUnavailable
-		}
-
-		return 0, err
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return res.SavedTo, nil
+	return res.Ok(r.SavedTo)
 }
 
-// SetOne sets the value for the key to gRPCis.
-func (c *Client) SetOne(ctx context.Context, key, value string, uniques bool) error {
-	server, err := c.set(ctx, key, value, setDefault, uniques)
-	if err != nil {
-		return err
+// SetOne sets the val for the key to gRPCis.
+func (c *Client) SetOne(ctx context.Context, key, val string, opts ...SetOptions) (res gost.Result[int32]) {
+	opt := SetOptions{}
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+
+	r := c.set(ctx, key, val, opt)
+	if r.IsErr() {
+		return r
 	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	server := r.Unwrap()
 	c.keysAndServers[key] = server
-	return nil
+	return res
 }
 
-// SetTo sets the value for the key on the specified server.
-func (c *Client) SetTo(ctx context.Context, key, value string, server int32, uniques bool) error {
-	_, err := c.set(ctx, key, value, server, uniques)
-	return err
+// SetToAll sets the val for the key on all servers.
+func (c *Client) SetToAll(ctx context.Context, key, val string, opts ...SetOptions) (res gost.Result[gost.Nothing]) {
+	opt := SetOptions{
+		Server: &setToAll,
+	}
+
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+
+	r := c.set(ctx, key, val, opt)
+	if r.IsErr() {
+		return res.Err(r.Error())
+	}
+
+	return res.Ok(gost.Nothing{})
 }
 
-// SetToDisk sets the value for the key in the physical database.
-func (c *Client) SetToDisk(ctx context.Context, key, value string, uniques bool) error {
-	_, err := c.set(ctx, key, value, setToDisk, uniques)
-	return err
-}
+// SetMany sets a set of vals for gRPCis.
+func (c *Client) SetMany(ctx context.Context, kv map[string]string, opts ...SetOptions) (res gost.Result[gost.Nothing]) {
+	opt := SetOptions{}
 
-// SetToAll sets the value for the key on all servers.
-func (c *Client) SetToAll(ctx context.Context, key, value string, uniques bool) error {
-	_, err := c.set(ctx, key, value, setToAll, uniques)
-	return err
-}
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
 
-// SetToAllAndToDisk sets the value for the key on all servers and in th physical database.
-func (c *Client) SetToAllAndToDisk(ctx context.Context, key, value string, uniques bool) error {
-	_, err := c.set(ctx, key, value, setToAllAndToDisk, uniques)
-	return err
-}
-
-// SetMany sets a set of values for gRPCis.
-func (c *Client) SetMany(ctx context.Context, keyValue map[string]string, uniques bool) error {
-	for key, value := range keyValue {
-		_, err := c.set(ctx, key, value, setDefault, uniques)
-		if err != nil {
-			return err
+	for key, val := range kv {
+		r := c.set(ctx, key, val, opt)
+		if r.IsErr() {
+			return res.Err(r.Error())
 		}
 	}
-	return nil
+	return res.Ok(gost.Nothing{})
 }
 
-// SetManyOpts gets a lot of values from gRPCis with opts.
-func (c *Client) SetManyOpts(ctx context.Context, keyValue map[string]Value, uniques bool) error {
-	for key, value := range keyValue {
-		_, err := c.set(ctx, key, value.Value, value.Opts.Server, uniques)
-		if err != nil {
-			return err
+// SetManyOpts gets a lot of vals from gRPCis with opts.
+func (c *Client) SetManyOpts(ctx context.Context, keyValue map[string]Value) (res gost.Result[gost.Nothing]) {
+	for key, val := range keyValue {
+		r := c.set(ctx, key, val.Value, val.Options)
+		if r.IsErr() {
+			return res.Err(r.Error())
 		}
 	}
-	return nil
+	return res.Ok(gost.Nothing{})
 }

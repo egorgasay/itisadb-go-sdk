@@ -2,9 +2,9 @@ package itisadb
 
 import (
 	"context"
-	"errors"
-	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
-	gcredentials "google.golang.org/grpc/credentials"
+	"fmt"
+	"github.com/egorgasay/gost"
+	api "github.com/egorgasay/itisadb-shared-proto/go"
 	"sync"
 
 	"google.golang.org/grpc"
@@ -15,72 +15,123 @@ type Client struct {
 	keysAndServers map[string]int32
 	mu             sync.RWMutex
 
-	cl balancer.BalancerClient
+	token string
+
+	cl api.ItisaDBClient
 }
 
-type Opts struct {
+type Options struct {
 	Server int32
+	Unique bool
 }
 
 type Value struct {
-	Value string
-	Opts  Opts
+	Value   string
+	Options SetOptions
 }
 
 type Key struct {
-	Key  string
-	Opts Opts
+	Key     string
+	Options GetOptions
 }
 
-var ErrUnavailable = errors.New("storage is unavailable")
+type Credentials struct {
+	Login    string
+	Password string
+}
 
-func New(balancerIP string, credentials ...gcredentials.TransportCredentials) (*Client, error) {
+type Config struct {
+	Credentials Credentials
+}
+
+const (
+	DefaultUser     = "itisadb"
+	DefaultPassword = "itisadb"
+)
+
+var defaultConfig = Config{
+	Credentials: Credentials{
+		Login:    DefaultUser,
+		Password: DefaultPassword,
+	},
+}
+
+func New(ctx context.Context, balancerIP string, conf ...Config) (res gost.Result[*Client]) {
 	var conn *grpc.ClientConn
 	var err error
 
-	if credentials == nil || len(credentials) == 0 {
-		conn, err = grpc.Dial(balancerIP, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	} else {
-		conn, err = grpc.Dial(balancerIP, grpc.WithTransportCredentials(credentials[0]))
+	config := defaultConfig
+	if len(conf) > 0 {
+		config = conf[0]
 	}
+
+	conn, err = grpc.Dial(balancerIP, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return res.Err(gost.NewError(0, 0, err.Error()))
+	}
+
+	client := api.NewItisaDBClient(conn)
+
+	resp, err := client.Authenticate(ctx, &api.AuthRequest{
+		Login:    config.Credentials.Login,
+		Password: config.Credentials.Password,
+	})
 
 	if err != nil {
-		return nil, err
+		return res.Err(gost.NewError(0, 0, fmt.Sprintf("failed to authenticate: %s", err)))
 	}
 
-	client := balancer.NewBalancerClient(conn)
+	authMetadata.Set(token, resp.Token)
 
-	return &Client{
+	return res.Ok(&Client{
 		keysAndServers: make(map[string]int32, 100),
 		cl:             client,
-	}, nil
+		token:          resp.Token,
+	})
 }
 
 // Object creates a new object.
-func (c *Client) Object(ctx context.Context, name string) (*Object, error) {
-	_, err := c.cl.Object(ctx, &balancer.BalancerObjectRequest{
+func (c *Client) Object(ctx context.Context, name string, opts ...ObjectOptions) (res gost.Result[*Object]) {
+	opt := ObjectOptions{
+		Level: Level(api.Level_DEFAULT),
+	}
+
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+
+	_, err := c.cl.Object(withAuth(ctx), &api.ObjectRequest{
 		Name: name,
+		Options: &api.ObjectRequest_Options{
+			Server: opt.Server,
+			Level:  api.Level(opt.Level),
+		},
 	})
 
 	if err != nil {
-		return nil, err
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return &Object{
-		name: name,
+	return res.Ok(&Object{
 		cl:   c.cl,
-	}, nil
+		name: name,
+	})
 }
 
 // IsObject checks if it is an object or not.
-func (c *Client) IsObject(ctx context.Context, name string) (bool, error) {
-	r, err := c.cl.IsObject(ctx, &balancer.BalancerIsObjectRequest{
+func (c *Client) IsObject(ctx context.Context, name string) (res gost.Result[bool]) {
+	r, err := c.cl.IsObject(withAuth(ctx), &api.IsObjectRequest{
 		Name: name,
 	})
 
 	if err != nil {
-		return false, err
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return r.Ok, nil
+	return res.Ok(r.Ok)
+}
+
+func ToServerNumber(x int) *int32 {
+	var y = int32(x)
+	return &y
 }

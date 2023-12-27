@@ -1,44 +1,40 @@
 package itisadb
 
 import (
-	"github.com/egorgasay/itisadb-go-sdk/api/balancer"
+	"github.com/egorgasay/gost"
+	api "github.com/egorgasay/itisadb-shared-proto/go"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
-func (c *Client) del(ctx context.Context, key string, server int32) error {
-	if ctx.Err() != nil {
-		return ctx.Err()
-	}
-	_, err := c.cl.Delete(ctx, &balancer.BalancerDeleteRequest{
-		Key:    key,
-		Server: server,
+func (c *Client) del(ctx context.Context, key string, opts DeleteOptions) (res gost.Result[gost.Nothing]) {
+	_, err := c.cl.Delete(withAuth(ctx), &api.DeleteRequest{
+		Key:     key,
+		Options: &api.DeleteRequest_Options{Server: opts.Server},
 	})
+
 	if err != nil {
-		st, ok := status.FromError(err)
-		if !ok {
-			return err
-		}
-
-		if st.Code() == codes.NotFound {
-			return ErrNotFound
-		}
-
-		if st.Code() == codes.Unavailable {
-			return ErrUnavailable
-		}
-
-		return err
+		return res.Err(errFromGRPCError(err))
 	}
-	return nil
+
+	return res.Ok(gost.Nothing{})
 }
 
-func (c *Client) Del(ctx context.Context, key string) error {
-	if ctx.Err() != nil {
-		return ctx.Err()
-	}
+func (c *Client) DelOne(ctx context.Context, key string, opts ...DeleteOptions) gost.Result[gost.Nothing] {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	return c.del(ctx, key, c.keysAndServers[key])
+
+	s, ok := c.keysAndServers[key]
+	delete(c.keysAndServers, key)
+
+	opt := DeleteOptions{}
+
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+
+	if ok {
+		opt.Server = &s
+	}
+
+	return c.del(ctx, key, opt)
 }
