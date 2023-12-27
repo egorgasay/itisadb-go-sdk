@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/egorgasay/gost"
-	"github.com/egorgasay/itisadb-go-sdk/api"
+	api "github.com/egorgasay/itisadb-shared-proto/go"
 	"sync"
 
 	"google.golang.org/grpc"

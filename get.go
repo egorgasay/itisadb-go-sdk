@@ -3,12 +3,7 @@ package itisadb
 import (
 	"context"
 	"github.com/egorgasay/gost"
-	"github.com/egorgasay/itisadb-go-sdk/api"
-)
-
-const (
-	_ = -iota
-	getFromDisk
+	api "github.com/egorgasay/itisadb-shared-proto/go"
 )
 
 func (c *Client) get(ctx context.Context, key string, opts GetOptions) (res gost.Result[string]) {

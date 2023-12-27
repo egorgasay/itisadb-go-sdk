@@ -6,7 +6,6 @@ type GetOptions struct {
 
 type SetOptions struct {
 	Server   *int32
-	Uniques  bool
 	ReadOnly bool
 }
 
@@ -44,7 +43,6 @@ type AttachToObjectOptions struct {
 type SetToObjectOptions struct {
 	Server   *int32
 	ReadOnly bool
-	Uniques  bool
 }
 
 type GetFromObjectOptions struct {

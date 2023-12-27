@@ -3,7 +3,7 @@ package itisadb
 import (
 	"context"
 	"github.com/egorgasay/gost"
-	"github.com/egorgasay/itisadb-go-sdk/api"
+	api "github.com/egorgasay/itisadb-shared-proto/go"
 )
 
 var (
@@ -16,8 +16,8 @@ func (c *Client) set(ctx context.Context, key, val string, opt SetOptions) (res 
 		Key:   key,
 		Value: val,
 		Options: &api.SetRequest_Options{
-			Server:  opt.Server,
-			Uniques: opt.Uniques,
+			Server:   opt.Server,
+			ReadOnly: opt.ReadOnly,
 		},
 	})
 

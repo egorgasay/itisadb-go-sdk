@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/egorgasay/gost"
-	"github.com/egorgasay/itisadb-go-sdk/api"
+	api "github.com/egorgasay/itisadb-shared-proto/go"
 )
 
 type Object struct {
@@ -25,8 +25,8 @@ func (i *Object) Set(ctx context.Context, key, value string, opts ...SetToObject
 		Value:  value,
 		Object: i.name,
 		Options: &api.SetToObjectRequest_Options{
-			Server:  opt.Server,
-			Uniques: opt.Uniques,
+			Server:   opt.Server,
+			ReadOnly: opt.ReadOnly,
 		},
 	})
 

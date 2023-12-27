@@ -2,7 +2,7 @@ package itisadb
 
 import (
 	"github.com/egorgasay/gost"
-	"github.com/egorgasay/itisadb-go-sdk/api"
+	api "github.com/egorgasay/itisadb-shared-proto/go"
 	"golang.org/x/net/context"
 )
 
