@@ -1,5 +1,7 @@
 github.com/egorgasay/gost v0.0.3 h1:T4EXYZNsPtH301oKDEorGCOItZjZDkMVgwu7j/aSNBo=
 github.com/egorgasay/gost v0.0.3/go.mod h1:tJpKJBSi4VwINACwn9xVZPu52zhP1P0xpxNvmwPzs3Y=
+github.com/egorgasay/gost v0.0.4 h1:JgywzOuoUWbkEON4v/gATqk8jEiABfV9m1vTu8dyPkE=
+github.com/egorgasay/gost v0.0.4/go.mod h1:tJpKJBSi4VwINACwn9xVZPu52zhP1P0xpxNvmwPzs3Y=
 github.com/egorgasay/itisadb-shared-proto/go v0.0.0-20231209214848-ede39fc63c13 h1:7nZ62d5ru6l7dncdGso0a65h0DJ+qmcBpA2mpTWMqnc=
 github.com/egorgasay/itisadb-shared-proto/go v0.0.0-20231209214848-ede39fc63c13/go.mod h1:+bjZAOGWVm8wSwlPUD4sZJoN/jd5vMeMVY7CnbjCED4=
 github.com/egorgasay/itisadb-shared-proto/go v0.0.0-20231231184311-b27f72fc3dea h1:Ea2wEbMqhpJ3RmpU0KTq8+wI8Dj+fbCOumjduMS027Y=

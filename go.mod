@@ -3,7 +3,7 @@ module github.com/egorgasay/itisadb-go-sdk
 go 1.21.0
 
 require (
-	github.com/egorgasay/gost v0.0.3
+	github.com/egorgasay/gost v0.0.4
 	golang.org/x/net v0.19.0
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.32.0
