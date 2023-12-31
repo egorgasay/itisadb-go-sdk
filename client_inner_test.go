@@ -2,7 +2,7 @@ package itisadb
 
 import (
 	"context"
-	"github.com/egorgasay/itisadb-go-sdk/api"
+	api "github.com/egorgasay/itisadb-shared-proto/go"
 	"testing"
 )
 
@@ -29,7 +29,7 @@ func TestSetToGetFrom(t *testing.T) {
 	ctx := context.TODO()
 	err := db.set(ctx, "fff", "qqq", SetOptions{
 		Server:   &snum,
-		Uniques:  false,
+		Unique:   false,
 		ReadOnly: false,
 	}).Error()
 	if err != nil {
