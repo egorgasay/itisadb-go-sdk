@@ -18,6 +18,8 @@ func (c *Client) set(ctx context.Context, key, val string, opt SetOptions) (res 
 		Options: &api.SetRequest_Options{
 			Server:   opt.Server,
 			ReadOnly: opt.ReadOnly,
+			Level:    api.Level(opt.Level),
+			Unique:   opt.Unique,
 		},
 	})
 
