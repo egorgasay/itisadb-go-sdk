@@ -37,15 +37,15 @@ func (c *Client) SetOne(ctx context.Context, key, val string, opts ...SetOptions
 		opt = opts[0]
 	}
 
-	r := c.set(ctx, key, val, opt)
-	if r.IsErr() {
-		return r
+	res = c.set(ctx, key, val, opt)
+	if res.IsErr() {
+		return res
 	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	server := r.Unwrap()
+	server := res.Unwrap()
 	c.keysAndServers[key] = server
 	return res
 }
