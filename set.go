@@ -37,23 +37,13 @@ func (c *Client) SetOne(ctx context.Context, key, val string, opts ...SetOptions
 		opt = opts[0]
 	}
 
-	res = c.set(ctx, key, val, opt)
-	if res.IsErr() {
-		return res
-	}
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	server := res.Unwrap()
-	c.keysAndServers[key] = server
-	return res
+	return c.set(ctx, key, val, opt)
 }
 
 // SetToAll sets the val for the key on all servers.
 func (c *Client) SetToAll(ctx context.Context, key, val string, opts ...SetOptions) (res gost.Result[gost.Nothing]) {
 	opt := SetOptions{
-		Server: &setToAll,
+		Server: setToAll,
 	}
 
 	if len(opts) > 0 {

@@ -5,16 +5,11 @@ import (
 	"fmt"
 	"github.com/egorgasay/gost"
 	api "github.com/egorgasay/itisadb-shared-proto/go"
-	"sync"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Client struct {
-	keysAndServers map[string]int32
-	mu             sync.RWMutex
-
 	token string
 
 	cl api.ItisaDBClient
@@ -84,9 +79,8 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (res gost.Resul
 	authMetadata.Set(token, resp.Token)
 
 	return res.Ok(&Client{
-		keysAndServers: make(map[string]int32, 100),
-		cl:             client,
-		token:          resp.Token,
+		cl:    client,
+		token: resp.Token,
 	})
 }
 

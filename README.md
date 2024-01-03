@@ -22,26 +22,16 @@ import (
 
 // main to run this test, itisadb must be run on :800.
 func main() {
-	db, err := itisadb.New(":800")
-	if err != nil {
-		return
-	}
-
 	ctx := context.TODO()
-	err = db.SetOne(ctx, "qwe", "111", false)
-	if err != nil {
-		log.Fatalln(err)
-	}
 
-	get, err := db.GetOne(ctx, "qwe")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	db := itisadb.New(ctx, ":8888").Unwrap()
 
-	if get != "111" {
+	db.SetOne(ctx, "qwe", "111").Unwrap()
+
+	if x := db.GetOne(ctx, "qwe").Unwrap().Value; x != "111" {
 		log.Fatal("Wrong value")
 	} else {
-		log.Println("Value:", get)
+		log.Println("Value:", x)
 	}
 }
 ```

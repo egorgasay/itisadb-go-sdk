@@ -44,19 +44,10 @@ func (c *Client) get(ctx context.Context, key string, opts GetOptions) (res gost
 
 // GetOne gets the value by the key from gRPCis.
 func (c *Client) GetOne(ctx context.Context, key string, opts ...GetOptions) (res gost.Result[Value]) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
 	opt := GetOptions{}
 
 	if len(opts) > 0 {
 		opt = opts[0]
-	}
-
-	if opt.Server != nil {
-		if s, ok := c.keysAndServers[key]; ok {
-			opt.Server = &s
-		}
 	}
 
 	return c.get(ctx, key, opt)

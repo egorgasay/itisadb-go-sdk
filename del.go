@@ -20,20 +20,10 @@ func (c *Client) del(ctx context.Context, key string, opts DeleteOptions) (res g
 }
 
 func (c *Client) DelOne(ctx context.Context, key string, opts ...DeleteOptions) gost.Result[gost.Nothing] {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	s, ok := c.keysAndServers[key]
-	delete(c.keysAndServers, key)
-
 	opt := DeleteOptions{}
 
 	if len(opts) > 0 {
 		opt = opts[0]
-	}
-
-	if ok {
-		opt.Server = &s
 	}
 
 	return c.del(ctx, key, opt)
