@@ -86,7 +86,7 @@ func (c *Client) SetMany(ctx context.Context, kv map[string]string, opts ...SetO
 }
 
 // SetManyOpts gets a lot of vals from gRPCis with opts.
-func (c *Client) SetManyOpts(ctx context.Context, keyValue map[string]Value) (res gost.Result[gost.Nothing]) {
+func (c *Client) SetManyOpts(ctx context.Context, keyValue map[string]ValueSpec) (res gost.Result[gost.Nothing]) {
 	for key, val := range keyValue {
 		r := c.set(ctx, key, val.Value, val.Options)
 		if r.IsErr() {

@@ -25,12 +25,12 @@ type Options struct {
 	Unique bool
 }
 
-type Value struct {
+type ValueSpec struct {
 	Value   string
 	Options SetOptions
 }
 
-type Key struct {
+type KeySpec struct {
 	Key     string
 	Options GetOptions
 }

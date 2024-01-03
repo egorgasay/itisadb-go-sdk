@@ -90,7 +90,7 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 		"mo5": "k5",
 	}
 
-	m := map[string]itisadb.Value{
+	m := map[string]itisadb.ValueSpec{
 		"mo1": {Value: "k1", Options: itisadb.SetOptions{Server: itisadb.ToServerNumber(1)}},
 		"mo2": {Value: "k2", Options: itisadb.SetOptions{Server: itisadb.ToServerNumber(1)}},
 		"mo3": {Value: "k3", Options: itisadb.SetOptions{Server: itisadb.ToServerNumber(-1)}},
@@ -107,7 +107,7 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 		t.Fatal("Wrong value")
 	}
 
-	k := []itisadb.Key{
+	k := []itisadb.KeySpec{
 		{Key: "mo1", Options: itisadb.GetOptions{Server: itisadb.ToServerNumber(1)}},
 		{Key: "mo2", Options: itisadb.GetOptions{Server: itisadb.ToServerNumber(1)}},
 		{Key: "mo3", Options: itisadb.GetOptions{Server: itisadb.ToServerNumber(-1)}},

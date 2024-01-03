@@ -6,7 +6,13 @@ import (
 	api "github.com/egorgasay/itisadb-shared-proto/go"
 )
 
-func (c *Client) get(ctx context.Context, key string, opts GetOptions) (res gost.Result[string]) {
+type Value struct {
+	Value    string
+	ReadOnly bool
+	Level    Level
+}
+
+func (c *Client) get(ctx context.Context, key string, opts GetOptions) (res gost.Result[Value]) {
 	r, err := c.cl.Get(withAuth(ctx), &api.GetRequest{
 		Key: key,
 		Options: &api.GetRequest_Options{
@@ -18,11 +24,26 @@ func (c *Client) get(ctx context.Context, key string, opts GetOptions) (res gost
 		return res.Err(errFromGRPCError(err))
 	}
 
-	return res.Ok(r.Value)
+	var level Level
+
+	switch gost.SafeDeref(r.Level.Enum()) {
+	case api.Level_DEFAULT:
+		level = DefaultLevel
+	case api.Level_RESTRICTED:
+		level = RestrictedLevel
+	case api.Level_SECRET:
+		level = SecretLevel
+	}
+
+	return res.Ok(Value{
+		Value:    r.Value,
+		ReadOnly: r.ReadOnly,
+		Level:    level,
+	})
 }
 
 // GetOne gets the value by the key from gRPCis.
-func (c *Client) GetOne(ctx context.Context, key string, opts ...GetOptions) (res gost.Result[string]) {
+func (c *Client) GetOne(ctx context.Context, key string, opts ...GetOptions) (res gost.Result[Value]) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -42,12 +63,12 @@ func (c *Client) GetOne(ctx context.Context, key string, opts ...GetOptions) (re
 }
 
 // GetMany gets a lot of values from gRPCis.
-func (c *Client) GetMany(ctx context.Context, keys []string, opts ...GetOptions) (res gost.Result[map[string]string]) {
+func (c *Client) GetMany(ctx context.Context, keys []string, opts ...GetOptions) (res gost.Result[map[string]Value]) {
 	if ctx.Err() != nil {
 		return res.Err(gost.NewError(0, 0, ctx.Err().Error()))
 	}
 
-	var keyValue = make(map[string]string, 10)
+	var keyValue = make(map[string]Value, 10)
 
 	opt := GetOptions{}
 
@@ -67,12 +88,12 @@ func (c *Client) GetMany(ctx context.Context, keys []string, opts ...GetOptions)
 }
 
 // GetManyOpts gets a lot of values from gRPCis with opts.
-func (c *Client) GetManyOpts(ctx context.Context, keys []Key) (res gost.Result[map[string]string]) {
+func (c *Client) GetManyOpts(ctx context.Context, keys []KeySpec) (res gost.Result[map[string]Value]) {
 	if ctx.Err() != nil {
 		return res.Err(gost.NewError(0, 0, ctx.Err().Error()))
 	}
 
-	var keyValue = make(map[string]string, 10)
+	var keyValue = make(map[string]Value, 10)
 
 	for _, key := range keys {
 		switch r := c.get(ctx, key.Key, key.Options); r.Switch() {
