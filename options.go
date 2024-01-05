@@ -17,6 +17,19 @@ type DeleteOptions struct {
 
 type Level byte
 
+func (l Level) String() string {
+	switch l {
+	case DefaultLevel:
+		return "Default"
+	case RestrictedLevel:
+		return "Restricted"
+	case SecretLevel:
+		return "Secret"
+	}
+
+	return "unknown"
+}
+
 type ObjectOptions struct {
 	Server int32
 	Level  Level

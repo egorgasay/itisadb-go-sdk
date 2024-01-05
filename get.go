@@ -2,15 +2,10 @@ package itisadb
 
 import (
 	"context"
+
 	"github.com/egorgasay/gost"
 	api "github.com/egorgasay/itisadb-shared-proto/go"
 )
-
-type Value struct {
-	Value    string
-	ReadOnly bool
-	Level    Level
-}
 
 func (c *Client) get(ctx context.Context, key string, opts GetOptions) (res gost.Result[Value]) {
 	r, err := c.cl.Get(withAuth(ctx), &api.GetRequest{
