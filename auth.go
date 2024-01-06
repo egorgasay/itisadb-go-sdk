@@ -2,6 +2,7 @@ package itisadb
 
 import (
 	"context"
+
 	"github.com/egorgasay/gost"
 	api "github.com/egorgasay/itisadb-shared-proto/go"
 	"google.golang.org/grpc/metadata"
@@ -19,6 +20,10 @@ const (
 var authMetadata = metadata.New(map[string]string{token: ""})
 
 func withAuth(ctx context.Context) context.Context {
+	if ctx.Value(token) != nil {
+		return ctx
+	}
+
 	return metadata.NewOutgoingContext(ctx, authMetadata)
 }
 
