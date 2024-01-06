@@ -63,7 +63,6 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (res gost.Resul
 
 	conn, err = grpc.Dial(balancerIP,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 	if err != nil {
 		return res.Err(gost.NewError(0, 0, err.Error()))
