@@ -98,7 +98,7 @@ func (c *Client) Object(ctx context.Context, name string, opts ...ObjectOptions)
 		opt = opts[0]
 	}
 
-	_, err := c.cl.Object(withAuth(ctx), &api.ObjectRequest{
+	r, err := c.cl.Object(withAuth(ctx), &api.ObjectRequest{
 		Name: name,
 		Options: &api.ObjectRequest_Options{
 			Server: opt.Server,
@@ -111,8 +111,9 @@ func (c *Client) Object(ctx context.Context, name string, opts ...ObjectOptions)
 	}
 
 	return res.Ok(&Object{
-		cl:   c.cl,
-		name: name,
+		cl:     c.cl,
+		name:   name,
+		server: r.Server,
 	})
 }
 

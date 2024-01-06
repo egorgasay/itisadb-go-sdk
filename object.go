@@ -3,27 +3,34 @@ package itisadb
 import (
 	"context"
 	"fmt"
+
 	"github.com/egorgasay/gost"
 	api "github.com/egorgasay/itisadb-shared-proto/go"
 )
 
 type Object struct {
-	name string
-	cl   api.ItisaDBClient
+	name   string
+	server int32
+	cl     api.ItisaDBClient
+}
+
+// Server returns the server ID of the object.
+func (o *Object) Server() int32 {
+	return o.server
 }
 
 // Set sets the value for the key in the specified object.
-func (i *Object) Set(ctx context.Context, key, value string, opts ...SetToObjectOptions) (res gost.Result[int32]) {
-	opt := SetToObjectOptions{}
+func (o *Object) Set(ctx context.Context, key, value string, opts ...SetToObjectOptions) (res gost.Result[int32]) {
+	opt := SetToObjectOptions{Server: o.server}
 
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 
-	r, err := i.cl.SetToObject(withAuth(ctx), &api.SetToObjectRequest{
+	r, err := o.cl.SetToObject(withAuth(ctx), &api.SetToObjectRequest{
 		Key:    key,
 		Value:  value,
-		Object: i.name,
+		Object: o.name,
 		Options: &api.SetToObjectRequest_Options{
 			Server:   opt.Server,
 			ReadOnly: opt.ReadOnly,
@@ -38,16 +45,16 @@ func (i *Object) Set(ctx context.Context, key, value string, opts ...SetToObject
 }
 
 // Get gets the value for the key from the specified object.
-func (i *Object) Get(ctx context.Context, key string, opts ...GetFromObjectOptions) (res gost.Result[string]) {
-	opt := GetFromObjectOptions{}
+func (o *Object) Get(ctx context.Context, key string, opts ...GetFromObjectOptions) (res gost.Result[string]) {
+	opt := GetFromObjectOptions{Server: o.server}
 
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 
-	r, err := i.cl.GetFromObject(withAuth(ctx), &api.GetFromObjectRequest{
+	r, err := o.cl.GetFromObject(withAuth(ctx), &api.GetFromObjectRequest{
 		Key:    key,
-		Object: i.name,
+		Object: o.name,
 		Options: &api.GetFromObjectRequest_Options{
 			Server: opt.Server,
 		},
@@ -61,17 +68,18 @@ func (i *Object) Get(ctx context.Context, key string, opts ...GetFromObjectOptio
 }
 
 // Object returns a new or an existing object.
-func (i *Object) Object(ctx context.Context, name string, opts ...ObjectOptions) (res gost.Result[*Object]) {
+func (o *Object) Object(ctx context.Context, name string, opts ...ObjectOptions) (res gost.Result[*Object]) {
 	opt := ObjectOptions{
-		Level: Level(api.Level_DEFAULT),
+		Level:  Level(api.Level_DEFAULT),
+		Server: o.server,
 	}
 
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 
-	name = fmt.Sprint(i.name, ".", name)
-	_, err := i.cl.Object(withAuth(ctx), &api.ObjectRequest{
+	name = fmt.Sprint(o.name, ".", name)
+	r, err := o.cl.Object(withAuth(ctx), &api.ObjectRequest{
 		Name: name,
 		Options: &api.ObjectRequest_Options{
 			Server: opt.Server,
@@ -84,26 +92,27 @@ func (i *Object) Object(ctx context.Context, name string, opts ...ObjectOptions)
 	}
 
 	return res.Ok(&Object{
-		name: name,
-		cl:   i.cl,
+		name:   name,
+		cl:     o.cl,
+		server: r.Server,
 	})
 }
 
 // Name returns the name of the object.
-func (i *Object) Name() string {
-	return i.name
+func (o *Object) Name() string {
+	return o.name
 }
 
 // JSON returns the object in JSON.
-func (i *Object) JSON(ctx context.Context, opts ...ObjectToJSONOptions) (res gost.Result[string]) {
-	opt := ObjectToJSONOptions{}
+func (o *Object) JSON(ctx context.Context, opts ...ObjectToJSONOptions) (res gost.Result[string]) {
+	opt := ObjectToJSONOptions{Server: o.server}
 
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 
-	r, err := i.cl.ObjectToJSON(withAuth(ctx), &api.ObjectToJSONRequest{
-		Name: i.name,
+	r, err := o.cl.ObjectToJSON(withAuth(ctx), &api.ObjectToJSONRequest{
+		Name: o.name,
 		Options: &api.ObjectToJSONRequest_Options{
 			Server: opt.Server,
 		},
@@ -117,15 +126,15 @@ func (i *Object) JSON(ctx context.Context, opts ...ObjectToJSONOptions) (res gos
 }
 
 // Size returns  the size of the object.
-func (i *Object) Size(ctx context.Context, opts ...SizeOptions) (res gost.Result[uint64]) {
-	opt := SizeOptions{}
+func (o *Object) Size(ctx context.Context, opts ...SizeOptions) (res gost.Result[uint64]) {
+	opt := SizeOptions{Server: o.server}
 
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 
-	r, err := i.cl.Size(withAuth(ctx), &api.ObjectSizeRequest{
-		Name: i.name,
+	r, err := o.cl.Size(withAuth(ctx), &api.ObjectSizeRequest{
+		Name: o.name,
 		Options: &api.ObjectSizeRequest_Options{
 			Server: opt.Server,
 		},
@@ -139,15 +148,15 @@ func (i *Object) Size(ctx context.Context, opts ...SizeOptions) (res gost.Result
 }
 
 // DeleteObject deletes the object.
-func (i *Object) DeleteObject(ctx context.Context, opts ...DeleteObjectOptions) (res gost.Result[gost.Nothing]) {
-	opt := DeleteObjectOptions{}
+func (o *Object) DeleteObject(ctx context.Context, opts ...DeleteObjectOptions) (res gost.Result[gost.Nothing]) {
+	opt := DeleteObjectOptions{Server: o.server}
 
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 
-	_, err := i.cl.DeleteObject(withAuth(ctx), &api.DeleteObjectRequest{
-		Object: i.name,
+	_, err := o.cl.DeleteObject(withAuth(ctx), &api.DeleteObjectRequest{
+		Object: o.name,
 		Options: &api.DeleteObjectRequest_Options{
 			Server: opt.Server,
 		},
@@ -161,15 +170,15 @@ func (i *Object) DeleteObject(ctx context.Context, opts ...DeleteObjectOptions) 
 }
 
 // Attach attaches the object to another object.
-func (i *Object) Attach(ctx context.Context, name string, opts ...AttachToObjectOptions) (res gost.Result[gost.Nothing]) {
-	opt := AttachToObjectOptions{}
+func (o *Object) Attach(ctx context.Context, name string, opts ...AttachToObjectOptions) (res gost.Result[gost.Nothing]) {
+	opt := AttachToObjectOptions{Server: o.server}
 
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 
-	_, err := i.cl.AttachToObject(withAuth(ctx), &api.AttachToObjectRequest{
-		Dst: i.name,
+	_, err := o.cl.AttachToObject(withAuth(ctx), &api.AttachToObjectRequest{
+		Dst: o.name,
 		Src: name,
 		Options: &api.AttachToObjectRequest_Options{
 			Server: opt.Server,
@@ -184,15 +193,15 @@ func (i *Object) Attach(ctx context.Context, name string, opts ...AttachToObject
 }
 
 // DeleteKey deletes the attribute from the object.
-func (i *Object) DeleteKey(ctx context.Context, key string, opts ...DeleteKeyOptions) (res gost.Result[gost.Nothing]) {
-	opt := DeleteKeyOptions{}
+func (o *Object) DeleteKey(ctx context.Context, key string, opts ...DeleteKeyOptions) (res gost.Result[gost.Nothing]) {
+	opt := DeleteKeyOptions{Server: o.server}
 
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 
-	_, err := i.cl.DeleteAttr(withAuth(ctx), &api.DeleteAttrRequest{
-		Object: i.name,
+	_, err := o.cl.DeleteAttr(withAuth(ctx), &api.DeleteAttrRequest{
+		Object: o.name,
 		Key:    key,
 		Options: &api.DeleteAttrRequest_Options{
 			Server: opt.Server,
