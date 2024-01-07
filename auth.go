@@ -67,28 +67,28 @@ func (c *Client) DeleteUser(ctx context.Context, login string) (res gost.Result[
 	return res.Ok(true)
 }
 
-func (c *Client) ChangePassword(ctx context.Context, login, newPassword string) error {
+func (c *Client) ChangePassword(ctx context.Context, login, newPassword string) (res gost.ResultN) {
 	_, err := c.cl.ChangePassword(withAuth(ctx), &api.ChangePasswordRequest{
 		Login:       login,
 		NewPassword: newPassword,
 	})
 
 	if err != nil {
-		return errFromGRPCError(err)
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return nil
+	return res.Ok()
 }
 
-func (c *Client) ChangeLevel(ctx context.Context, login string, level Level) error {
+func (c *Client) ChangeLevel(ctx context.Context, login string, level Level) (res gost.ResultN) {
 	_, err := c.cl.ChangeLevel(withAuth(ctx), &api.ChangeLevelRequest{
 		Login: login,
 		Level: int32(level),
 	})
 
 	if err != nil {
-		return errFromGRPCError(err)
+		return res.Err(errFromGRPCError(err))
 	}
 
-	return nil
+	return res.Ok()
 }
