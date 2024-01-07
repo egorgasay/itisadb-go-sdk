@@ -20,7 +20,7 @@ import (
 	"log"
 )
 
-// main to run this test, itisadb must be run on :800.
+// main to run this test, itisadb must be run on :8888.
 func main() {
 	ctx := context.TODO()
 
