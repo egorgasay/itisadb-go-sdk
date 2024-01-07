@@ -72,6 +72,6 @@ type DeleteKeyOptions struct {
 	Server int32
 }
 
-type CreateUserOptions struct {
+type NewUserOptions struct {
 	Level Level
 }

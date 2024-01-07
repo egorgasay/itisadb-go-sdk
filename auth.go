@@ -20,21 +20,21 @@ const (
 var authMetadata = metadata.New(map[string]string{token: ""})
 
 func withAuth(ctx context.Context) context.Context {
-	if ctx.Value(token) != nil {
+	if v, ok := metadata.FromOutgoingContext(ctx); ok && len(v.Get(token)) > 0 {
 		return ctx
 	}
 
 	return metadata.NewOutgoingContext(ctx, authMetadata)
 }
 
-func (c *Client) CreateUser(ctx context.Context, login, password string, opts ...CreateUserOptions) (res gost.Result[gost.Nothing]) {
-	opt := CreateUserOptions{}
+func (c *Client) NewUser(ctx context.Context, login, password string, opts ...NewUserOptions) (res gost.Result[gost.Nothing]) {
+	opt := NewUserOptions{}
 
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 
-	_, err := c.cl.CreateUser(withAuth(ctx), &api.CreateUserRequest{
+	_, err := c.cl.NewUser(withAuth(ctx), &api.NewUserRequest{
 		User: &api.User{Login: login, Password: password, Level: uint32(opt.Level)},
 	})
 

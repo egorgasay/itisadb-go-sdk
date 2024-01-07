@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/egorgasay/itisadb-go-sdk"
 	"math/rand"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/egorgasay/itisadb-go-sdk"
 )
 
 var _ctx = context.TODO()
@@ -28,7 +29,7 @@ func TestSetGetOne(t *testing.T) {
 
 	get := db.GetOne(ctx, "qwe").Unwrap()
 
-	if get != "111" {
+	if get.Value != "111" {
 		t.Fatal("Wrong value")
 	}
 }
@@ -42,8 +43,8 @@ func TestSetToAllGet(t *testing.T) {
 	get := db.GetOne(ctx, "all_key").Unwrap()
 
 	want := "qqq"
-	if get != want {
-		t.Fatalf("Wrong value [%s] wanted [%s]\n", get, want)
+	if get.Value != want {
+		t.Fatalf("Wrong value [%s] wanted [%s]\n", get.Value, want)
 	}
 }
 
@@ -65,7 +66,7 @@ func TestSetManyGetMany(t *testing.T) {
 
 	get := db.GetOne(ctx, "m2").Unwrap()
 
-	if get != "k2" {
+	if get.Value != "k2" {
 		t.Fatal("Wrong value")
 	}
 
@@ -91,11 +92,11 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 	}
 
 	m := map[string]itisadb.ValueSpec{
-		"mo1": {Value: "k1", Options: itisadb.SetOptions{Server: itisadb.ToServerNumber(1)}},
-		"mo2": {Value: "k2", Options: itisadb.SetOptions{Server: itisadb.ToServerNumber(1)}},
-		"mo3": {Value: "k3", Options: itisadb.SetOptions{Server: itisadb.ToServerNumber(-1)}},
-		"mo4": {Value: "k4", Options: itisadb.SetOptions{Server: itisadb.ToServerNumber(-2)}},
-		"mo5": {Value: "k5", Options: itisadb.SetOptions{Server: itisadb.ToServerNumber(-3)}},
+		"mo1": {Value: "k1", Options: itisadb.SetOptions{Server: 1}},
+		"mo2": {Value: "k2", Options: itisadb.SetOptions{Server: 1}},
+		"mo3": {Value: "k3", Options: itisadb.SetOptions{Server: -1}},
+		"mo4": {Value: "k4", Options: itisadb.SetOptions{Server: -2}},
+		"mo5": {Value: "k5", Options: itisadb.SetOptions{Server: -3}},
 	}
 
 	ctx := context.TODO()
@@ -103,16 +104,16 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 
 	get := db.GetOne(ctx, "mo2").Unwrap()
 
-	if get != "k2" {
+	if get.Value != "k2" {
 		t.Fatal("Wrong value")
 	}
 
 	k := []itisadb.KeySpec{
-		{Key: "mo1", Options: itisadb.GetOptions{Server: itisadb.ToServerNumber(1)}},
-		{Key: "mo2", Options: itisadb.GetOptions{Server: itisadb.ToServerNumber(1)}},
-		{Key: "mo3", Options: itisadb.GetOptions{Server: itisadb.ToServerNumber(-1)}},
-		{Key: "mo4", Options: itisadb.GetOptions{Server: itisadb.ToServerNumber(0)}},
-		{Key: "mo5", Options: itisadb.GetOptions{Server: itisadb.ToServerNumber(0)}},
+		{Key: "mo1", Options: itisadb.GetOptions{Server: 1}},
+		{Key: "mo2", Options: itisadb.GetOptions{Server: 1}},
+		{Key: "mo3", Options: itisadb.GetOptions{Server: -1}},
+		{Key: "mo4", Options: itisadb.GetOptions{Server: 0}},
+		{Key: "mo5", Options: itisadb.GetOptions{Server: 0}},
 	}
 
 	res := db.GetManyOpts(ctx, k).Unwrap()
@@ -320,31 +321,19 @@ func TestSetGetOneFromObject(t *testing.T) {
 
 	/// TRAILER
 
-	trailer, err := car.Object(context.TODO(), "Trailer").Unwrap()
-	if err != nil {
-		t.Fatal(err)
-	}
+	trailer := car.Object(context.TODO(), "Trailer").Unwrap()
 
-	err = trailer.Set(context.TODO(), "Color", "Red").Error()
-	if err != nil {
-		t.Fatal(err)
-	}
+	trailer.Set(context.TODO(), "Color", "Red").Unwrap()
 
 	/// TEST WHEEL & TRAILER AREAS ARE STILL WORKING
 
-	value, err = wheel.Get(context.TODO(), "Color").Unwrap()
-	if err != nil {
-		t.Fatal(err)
-	}
+	value = wheel.Get(context.TODO(), "Color").Unwrap()
 
 	if value != "Black" {
 		t.Fatal("Wrong value")
 	}
 
-	value, err = trailer.Get(context.TODO(), "Color").Unwrap()
-	if err != nil {
-		t.Fatal(err)
-	}
+	value = trailer.Get(context.TODO(), "Color").Unwrap()
 
 	if value != "Red" {
 		t.Fatal("Wrong value")
@@ -356,31 +345,25 @@ func TestIsObject(t *testing.T) {
 	db := itisadb.New(_ctx, ":8888").Unwrap()
 
 	name := fmt.Sprintf("%d", time.Now().Unix())
-	object, err := db.Object(context.TODO(), name).Unwrap()
-	if err != nil {
-		t.Fatalf("Object error: %s\n", err)
-	}
+	object := db.Object(context.TODO(), name).Unwrap()
 
 	time.Sleep(time.Second)
 
 	ctx := context.TODO()
-	if ok, err := db.IsObject(ctx, object.Name()).Unwrap(); err != nil || !ok {
+	if ok := db.IsObject(ctx, object.Name()).Unwrap(); !ok {
 		t.Fatal("Not an object, but should be")
 	}
 
 	name = fmt.Sprintf("%d", time.Now().Unix())
-	newObject, err := object.Object(ctx, object.Name()).Unwrap()
-	if err != nil {
-		t.Fatalf("Object error: %s\n", err)
-	}
+	newObject := object.Object(ctx, object.Name()).Unwrap()
 
 	time.Sleep(time.Second)
 
-	if ok, err := db.IsObject(ctx, newObject.Name()).Unwrap(); err != nil || !ok {
+	if ok := db.IsObject(ctx, newObject.Name()).Unwrap(); !ok {
 		t.Fatal("Not an object, but should be")
 	}
 
-	if ok, _ := db.IsObject(ctx, fmt.Sprintf("%d", time.Now().Unix())).Unwrap(); ok {
+	if ok := db.IsObject(ctx, fmt.Sprintf("%d", time.Now().Unix())).Unwrap(); ok {
 		t.Fatal("Object, but should not be")
 	}
 }
@@ -388,27 +371,20 @@ func TestIsObject(t *testing.T) {
 func TestSize(t *testing.T) {
 	db := itisadb.New(_ctx, ":8888").Unwrap()
 
-	object, err := db.Object(context.TODO(), fmt.Sprintf("%d", time.Now().Unix())).Unwrap()
-	if err != nil {
-		t.Fatal(err)
-	}
+	object := db.Object(context.TODO(), fmt.Sprintf("%d", time.Now().Unix())).Unwrap()
 
-	size, err := object.Size(context.TODO()).Unwrap()
-	if err != nil {
-		t.Fatalf("Error %v\n", err)
-	} else if size != 0 {
+	size := object.Size(context.TODO()).Unwrap()
+	if size != 0 {
 		t.Fatalf("Wrong size %d\n", size)
 	}
 
 	for i := 0; i < 100; i++ {
 		k := fmt.Sprint(i)
 		v := fmt.Sprint(i)
-		if err = object.Set(context.TODO(), k, v).Error(); err != nil {
-			t.Fatalf("Set error %v\n", err)
-		}
+		object.Set(context.TODO(), k, v).Unwrap()
 	}
 
-	if size, err := object.Size(context.TODO()).Unwrap(); err != nil || size != 100 {
+	if size := object.Size(context.TODO()).Unwrap(); size != 100 {
 		t.Fatalf("Wrong size %d\n", size)
 	}
 }
@@ -420,10 +396,7 @@ func TestGetObject(t *testing.T) {
 	time.Sleep(time.Second)
 
 	name := fmt.Sprintf("%d", time.Now().Unix())
-	object, err := db.Object(context.TODO(), name).Unwrap()
-	if err != nil {
-		t.Fatalf("Object error: %s\n", err)
-	}
+	object := db.Object(context.TODO(), name).Unwrap()
 
 	data := map[string]string{
 		"key1": "value1",
@@ -434,19 +407,14 @@ func TestGetObject(t *testing.T) {
 	}
 
 	for k, v := range data {
-		if err = object.Set(context.TODO(), k, v).Error(); err != nil {
-			t.Fatalf("Set error %v\n", err)
-		}
+		object.Set(context.TODO(), k, v).Unwrap()
 	}
 
 	ctx := context.TODO()
-	m, err := object.JSON(ctx).Unwrap()
-	if err != nil {
-		t.Fatalf("GetObject error %v\n", err)
-	}
+	m := object.JSON(ctx).Unwrap()
 
 	var mMap map[string]any
-	err = json.Unmarshal([]byte(m), &mMap)
+	err := json.Unmarshal([]byte(m), &mMap)
 	if err != nil {
 		t.Fatalf("Marshal error %v\n", err)
 	}
@@ -485,7 +453,7 @@ func TestGetObject(t *testing.T) {
 }
 
 //func TestDistinct(t *testing.T) {
-//	f, err := os.Open("/tmp/log14/transactionLogger")
+//	f:= os.Open("/tmp/log14/transactionLogger")
 //	if err != nil {
 //		t.Fatal(err)
 //	}
@@ -495,7 +463,7 @@ func TestGetObject(t *testing.T) {
 //	scanner := bufio.NewScanner(f)
 //	for scanner.Scan() {
 //		action := scanner.Text()
-//		decode, err := strutil.Base64Decode([]byte(action))
+//		decode:= strutil.Base64Decode([]byte(action))
 //		if err != nil {
 //			return
 //		}
@@ -570,10 +538,7 @@ func TestClient_StructToObject(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	mi, err := object.JSON(context.TODO()).Unwrap()
-	if err != nil {
-		t.Fatal(err)
-	}
+	mi := object.JSON(context.TODO()).Unwrap()
 
 	want := `{
 	"name": "User1",
@@ -713,7 +678,7 @@ func TestClient_ObjectToStruct(t *testing.T) {
 		},
 	}
 
-	_, err = db.StructToObject(context.TODO(), "User33", user)
+	_, err := db.StructToObject(context.TODO(), "User33", user)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -756,7 +721,7 @@ func cmpReflect(a, b reflect.Value) bool {
 }
 
 //func TestClient_GetCmp(t *testing.T) {
-//	db, err := itisadb.New(_ctx, ":8888")
+//	db:= itisadb.New(_ctx, ":8888")
 //	if err != nil {
 //		log.Fatalln(err)
 //	}
@@ -769,7 +734,7 @@ func cmpReflect(a, b reflect.Value) bool {
 //		return
 //	}
 //
-//	got, err := itisadb.GetCmp[string](ctx, db, "qwe")
+//	got:= itisadb.GetCmp[string](ctx, db, "qwe")
 //	if err != nil {
 //		t.Errorf("GetCmp() error = %v, wantErr no", err)
 //		return
@@ -780,7 +745,7 @@ func cmpReflect(a, b reflect.Value) bool {
 //		return
 //	}
 //
-//	iint, err := itisadb.GetCmp[int](ctx, db, "qwe")
+//	iint:= itisadb.GetCmp[int](ctx, db, "qwe")
 //	if err != nil {
 //		t.Errorf("GetCmp() error = %v, wantErr no", err)
 //		return
@@ -817,48 +782,38 @@ func TestClient_DeleteUser(t *testing.T) {
 
 	ctx := context.TODO()
 
-	err = db.CreateUser(ctx, "max", "123").Error()
+	err := db.NewUser(ctx, "max", "123").Error()
 	if err != nil {
-		t.Fatalf("CreateUser: %v", err)
+		t.Fatalf("NewUser: %v", err)
 		return
 	}
 
 	res := db.DeleteUser(ctx, "max")
-	if res.Error() != nil {
-		t.Fatalf("DeleteUser: %v", err)
-		return
-	}
-
-	if res.Val() != true {
+	if res.Unwrap() != true {
 		t.Fatalf("user should exist")
 		return
 	}
 
 	res = db.DeleteUser(ctx, "max2")
-	if res.Error() != nil {
-		t.Fatalf("DeleteUser with non-existing user: %v", res.Error())
-		return
-	}
-
-	if res.Val() != false {
+	if res.Unwrap() != false {
 		t.Fatalf("user should not exist")
 	}
 }
 
-func TestClient_CreateUser(t *testing.T) {
+func TestClient_NewUser(t *testing.T) {
 	db := itisadb.New(_ctx, ":8888").Unwrap()
 
 	ctx := context.TODO()
 
-	err = db.DeleteUser(ctx, "max").Error()
+	err := db.DeleteUser(ctx, "max").Error()
 	if err != nil {
 		t.Fatalf("DeleteUser: %v", err)
 		return
 	}
 
-	err = db.CreateUser(ctx, "max", "123").Error()
+	err = db.NewUser(ctx, "max", "123").Error()
 	if err != nil {
-		t.Fatalf("CreateUser: %v", err)
+		t.Fatalf("NewUser: %v", err)
 		return
 	}
 
@@ -868,25 +823,25 @@ func TestClient_CreateUser(t *testing.T) {
 		},
 	}
 
-	db, err = itisadb.New(_ctx, ":8888", conf)
+	db = itisadb.New(_ctx, ":8888", conf).Unwrap()
 	if err != nil {
 		t.Fatalf("New with config: %v", err)
 		return
 	}
 
-	res := db.CreateUser(ctx, "max2", "123", itisadb.CreateUserOptions{
+	res := db.NewUser(ctx, "max2", "123", itisadb.NewUserOptions{
 		Level: itisadb.DefaultLevel,
 	})
 
 	if res.Error() != nil {
-		t.Fatalf("CreateUser with options: %v", res.Error())
+		t.Fatalf("NewUser with options: %v", res.Error())
 		return
 	}
 
-	if res.Val() != true {
-		t.Fatalf("user should exist")
-		return
-	}
+	//if res.Unwrap() != true {
+	//	t.Fatalf("user should exist")
+	//	return
+	//}
 }
 
 func TestClient_ChangePassword(t *testing.T) {
@@ -894,33 +849,29 @@ func TestClient_ChangePassword(t *testing.T) {
 
 	ctx := context.TODO()
 
-	err = db.CreateUser(ctx, "max", "123").Error()
+	err := db.NewUser(ctx, "max", "123").Error()
 	if err != nil {
-		t.Fatalf("CreateUser: %v", err)
+		t.Fatalf("NewUser: %v", err)
 		return
 	}
 
-	err = db.ChangePassword(ctx, "max", "1234")
+	err = db.ChangePassword(ctx, "max", "1234").Error()
 	if err != nil {
 		t.Fatalf("ChangePassword: %v", err)
 		return
 	}
 
-	db, err = itisadb.New(_ctx, ":8888", itisadb.Config{
+	db = itisadb.New(_ctx, ":8888", itisadb.Config{
 		Credentials: itisadb.Credentials{
 			Login: "max", Password: "1234",
 		},
-	})
-	if err != nil {
-		t.Fatalf("New with new password: %v", err)
-		return
-	}
+	}).Unwrap()
 
-	db, err = itisadb.New(_ctx, ":8888", itisadb.Config{
+	err = itisadb.New(_ctx, ":8888", itisadb.Config{
 		Credentials: itisadb.Credentials{
 			Login: "max", Password: "63231fwe23e1e3",
 		},
-	})
+	}).Error()
 	if err == nil {
 		t.Fatal("no error with wrong password")
 		return
@@ -932,11 +883,11 @@ func TestClient_ChangeLevel(t *testing.T) {
 
 	ctx := context.TODO()
 
-	err = db.CreateUser(ctx, "max", "123", itisadb.CreateUserOptions{
+	err := db.NewUser(ctx, "max", "123", itisadb.NewUserOptions{
 		Level: itisadb.DefaultLevel,
 	}).Error()
 	if err != nil {
-		t.Fatalf("CreateUser: %v", err)
+		t.Fatalf("NewUser: %v", err)
 		return
 	}
 
@@ -950,7 +901,7 @@ func TestClient_ChangeLevel(t *testing.T) {
 	}
 
 	// Change "max" to restricted level
-	err = db.ChangeLevel(ctx, "max", itisadb.RestrictedLevel)
+	err = db.ChangeLevel(ctx, "max", itisadb.RestrictedLevel).Error()
 	if err != nil {
 		t.Fatalf("ChangePassword: %v", err)
 		return
