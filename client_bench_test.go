@@ -3,18 +3,19 @@ package itisadb_test
 import (
 	"context"
 	"fmt"
-	"github.com/egorgasay/itisadb-go-sdk"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/egorgasay/itisadb-go-sdk"
 )
 
 // Test to define rps for SetOne.
 func TestSetOneRPS(b *testing.T) {
 	db := itisadb.New(_ctx, ":8888").Unwrap()
 
-	const maxRPS = 100_000
-	const gnum = maxRPS * 10
+	const maxRPS = 80_000
+	const gnum = maxRPS * 20
 
 	b.Log("Total actions:", gnum)
 	b.Log("RPS:", maxRPS)
@@ -57,7 +58,7 @@ func TestSetOneRPS(b *testing.T) {
 // Test to define rps for Get.
 func BenchmarkGetOneRPS(b *testing.B) {
 	db := itisadb.New(_ctx, ":8888").Unwrap()
-	const maxRPS = 71_100
+	const maxRPS = 70_000
 	const gnum = maxRPS * 10
 
 	b.Log("Total actions:", gnum)

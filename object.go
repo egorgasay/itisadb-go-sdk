@@ -9,19 +9,50 @@ import (
 )
 
 type Object struct {
-	name   string
-	server int32
-	cl     api.ItisaDBClient
+	name string
+	opt  ObjectOptions
+
+	cl api.ItisaDBClient
+}
+
+func (c *Client) Object(name string, opts ...ObjectOptions) *Object {
+	opt := ObjectOptions{}
+
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+
+	return &Object{
+		name: name,
+		opt:  opt,
+		cl:   c.cl,
+	}
+}
+
+func (o *Object) Create(ctx context.Context) (res gost.Result[*Object]) {
+	_, err := o.cl.Object(withAuth(ctx), &api.ObjectRequest{
+		Name: o.name,
+		Options: &api.ObjectRequest_Options{
+			Server: o.opt.Server,
+			Level:  api.Level(o.opt.Level),
+		},
+	})
+
+	if err != nil {
+		return res.Err(errFromGRPCError(err))
+	}
+
+	return res.Ok(o)
 }
 
 // Server returns the server ID of the object.
 func (o *Object) Server() int32 {
-	return o.server
+	return o.opt.Server
 }
 
 // Set sets the value for the key in the specified object.
 func (o *Object) Set(ctx context.Context, key, value string, opts ...SetToObjectOptions) (res gost.Result[int32]) {
-	opt := SetToObjectOptions{Server: o.server}
+	opt := SetToObjectOptions{Server: o.opt.Server}
 
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -46,7 +77,7 @@ func (o *Object) Set(ctx context.Context, key, value string, opts ...SetToObject
 
 // Get gets the value for the key from the specified object.
 func (o *Object) Get(ctx context.Context, key string, opts ...GetFromObjectOptions) (res gost.Result[string]) {
-	opt := GetFromObjectOptions{Server: o.server}
+	opt := GetFromObjectOptions{Server: o.opt.Server}
 
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -68,34 +99,18 @@ func (o *Object) Get(ctx context.Context, key string, opts ...GetFromObjectOptio
 }
 
 // Object returns a new or an existing object.
-func (o *Object) Object(ctx context.Context, name string, opts ...ObjectOptions) (res gost.Result[*Object]) {
-	opt := ObjectOptions{
-		Level:  Level(api.Level_DEFAULT),
-		Server: o.server,
-	}
+func (o *Object) Object(name string, opts ...ObjectOptions) *Object {
+	opt := ObjectOptions{}
 
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 
-	name = fmt.Sprint(o.name, ".", name)
-	r, err := o.cl.Object(withAuth(ctx), &api.ObjectRequest{
-		Name: name,
-		Options: &api.ObjectRequest_Options{
-			Server: opt.Server,
-			Level:  api.Level(opt.Level),
-		},
-	})
-
-	if err != nil {
-		return res.Err(errFromGRPCError(err))
+	return &Object{
+		name: fmt.Sprint(o.name, ObjectSeparator, name),
+		cl:   o.cl,
+		opt:  opt,
 	}
-
-	return res.Ok(&Object{
-		name:   name,
-		cl:     o.cl,
-		server: r.Server,
-	})
 }
 
 // Name returns the name of the object.
@@ -105,7 +120,7 @@ func (o *Object) Name() string {
 
 // JSON returns the object in JSON.
 func (o *Object) JSON(ctx context.Context, opts ...ObjectToJSONOptions) (res gost.Result[string]) {
-	opt := ObjectToJSONOptions{Server: o.server}
+	opt := ObjectToJSONOptions{Server: o.opt.Server}
 
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -127,7 +142,7 @@ func (o *Object) JSON(ctx context.Context, opts ...ObjectToJSONOptions) (res gos
 
 // Size returns  the size of the object.
 func (o *Object) Size(ctx context.Context, opts ...SizeOptions) (res gost.Result[uint64]) {
-	opt := SizeOptions{Server: o.server}
+	opt := SizeOptions{Server: o.opt.Server}
 
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -149,7 +164,7 @@ func (o *Object) Size(ctx context.Context, opts ...SizeOptions) (res gost.Result
 
 // DeleteObject deletes the object.
 func (o *Object) DeleteObject(ctx context.Context, opts ...DeleteObjectOptions) (res gost.Result[gost.Nothing]) {
-	opt := DeleteObjectOptions{Server: o.server}
+	opt := DeleteObjectOptions{Server: o.opt.Server}
 
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -171,7 +186,7 @@ func (o *Object) DeleteObject(ctx context.Context, opts ...DeleteObjectOptions) 
 
 // Attach attaches the object to another object.
 func (o *Object) Attach(ctx context.Context, name string, opts ...AttachToObjectOptions) (res gost.Result[gost.Nothing]) {
-	opt := AttachToObjectOptions{Server: o.server}
+	opt := AttachToObjectOptions{Server: o.opt.Server}
 
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -194,7 +209,7 @@ func (o *Object) Attach(ctx context.Context, name string, opts ...AttachToObject
 
 // DeleteKey deletes the attribute from the object.
 func (o *Object) DeleteKey(ctx context.Context, key string, opts ...DeleteKeyOptions) (res gost.Result[gost.Nothing]) {
-	opt := DeleteKeyOptions{Server: o.server}
+	opt := DeleteKeyOptions{Server: o.opt.Server}
 
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -213,4 +228,17 @@ func (o *Object) DeleteKey(ctx context.Context, key string, opts ...DeleteKeyOpt
 	}
 
 	return res.Ok(gost.Nothing{})
+}
+
+// Is checks if it is an object or not.
+func (o *Object) Is(ctx context.Context) (res gost.Result[bool]) {
+	r, err := o.cl.IsObject(withAuth(ctx), &api.IsObjectRequest{
+		Name: o.name,
+	})
+
+	if err != nil {
+		return res.Err(errFromGRPCError(err))
+	}
+
+	return res.Ok(r.Ok)
 }

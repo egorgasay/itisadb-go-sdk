@@ -3,7 +3,6 @@ package itisadb
 import (
 	"context"
 	"fmt"
-	"github.com/egorgasay/gost"
 	"reflect"
 	"strconv"
 )
@@ -23,18 +22,11 @@ func (c *Client) StructToObject(ctx context.Context, name string, structure any)
 }
 
 func (c *Client) structToObject(ctx context.Context, name string, structure any, parent *Object) (object *Object, err error) {
-	var res gost.Result[*Object]
-
 	if parent != nil {
-		res = parent.Object(ctx, name)
+		object = parent.Object(name)
 	} else {
-		res = c.Object(ctx, name)
+		object = c.Object(name)
 	}
-
-	if res.IsErr() {
-		return nil, res.Error()
-	}
-	object = res.Unwrap()
 
 	// reflection is used to iterate over the struct
 	// and create the object
@@ -102,19 +94,13 @@ func (c *Client) ObjectToStruct(ctx context.Context, name string, data any) erro
 }
 
 func (c *Client) objectToStruct(ctx context.Context, name string, obj reflect.Value, parent *Object) (err error) {
-	var res gost.Result[*Object]
+	var object *Object
 
 	if parent != nil {
-		res = parent.Object(ctx, name)
+		object = parent.Object(name)
 	} else {
-		res = c.Object(ctx, name)
+		object = c.Object(name)
 	}
-
-	if res.IsErr() {
-		return res.Error()
-	}
-
-	object := res.Unwrap()
 
 	if obj.Type().Kind() == reflect.Pointer {
 		obj = obj.Elem()

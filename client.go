@@ -45,6 +45,8 @@ const (
 	DefaultPassword = "itisadb"
 )
 
+const ObjectSeparator = "."
+
 var defaultConfig = Config{
 	Credentials: Credentials{
 		Login:    DefaultUser,
@@ -85,51 +87,4 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (res gost.Resul
 		cl:    client,
 		token: resp.Token,
 	})
-}
-
-// Object creates a new object.
-func (c *Client) Object(ctx context.Context, name string, opts ...ObjectOptions) (res gost.Result[*Object]) {
-	opt := ObjectOptions{
-		Level: Level(api.Level_DEFAULT),
-	}
-
-	if len(opts) > 0 {
-		opt = opts[0]
-	}
-
-	r, err := c.cl.Object(withAuth(ctx), &api.ObjectRequest{
-		Name: name,
-		Options: &api.ObjectRequest_Options{
-			Server: opt.Server,
-			Level:  api.Level(opt.Level),
-		},
-	})
-
-	if err != nil {
-		return res.Err(errFromGRPCError(err))
-	}
-
-	return res.Ok(&Object{
-		cl:     c.cl,
-		name:   name,
-		server: r.Server,
-	})
-}
-
-// IsObject checks if it is an object or not.
-func (c *Client) IsObject(ctx context.Context, name string) (res gost.Result[bool]) {
-	r, err := c.cl.IsObject(withAuth(ctx), &api.IsObjectRequest{
-		Name: name,
-	})
-
-	if err != nil {
-		return res.Err(errFromGRPCError(err))
-	}
-
-	return res.Ok(r.Ok)
-}
-
-func ToServerNumber(x int) *int32 {
-	var y = int32(x)
-	return &y
 }
