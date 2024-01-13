@@ -20,14 +20,14 @@ func (c *Client) Object(name string) *Object {
 	}
 }
 
-func (o *Object) Create(ctx context.Context, opts ...ObjectOptions) (res gost.Result[*Object]) {
+func (o *Object) Create(ctx context.Context, opts ...ObjectOptions) (res gost.Result[int32]) {
 	opt := ObjectOptions{}
 
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 
-	_, err := o.cl.Object(withAuth(ctx), &api.ObjectRequest{
+	r, err := o.cl.Object(withAuth(ctx), &api.ObjectRequest{
 		Name: o.name,
 		Options: &api.ObjectRequest_Options{
 			Server: opt.Server,
@@ -39,7 +39,7 @@ func (o *Object) Create(ctx context.Context, opts ...ObjectOptions) (res gost.Re
 		return res.Err(errFromGRPCError(err))
 	}
 
-	return res.Ok(o)
+	return res.Ok(r.Server)
 }
 
 // Server returns the server ID of the object.
