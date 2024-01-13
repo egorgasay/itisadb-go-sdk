@@ -10,31 +10,28 @@ import (
 
 type Object struct {
 	name string
-	opt  ObjectOptions
-
-	cl api.ItisaDBClient
+	cl   api.ItisaDBClient
 }
 
-func (c *Client) Object(name string, opts ...ObjectOptions) *Object {
+func (c *Client) Object(name string) *Object {
+	return &Object{
+		name: name,
+		cl:   c.cl,
+	}
+}
+
+func (o *Object) Create(ctx context.Context, opts ...ObjectOptions) (res gost.Result[*Object]) {
 	opt := ObjectOptions{}
 
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
 
-	return &Object{
-		name: name,
-		opt:  opt,
-		cl:   c.cl,
-	}
-}
-
-func (o *Object) Create(ctx context.Context) (res gost.Result[*Object]) {
 	_, err := o.cl.Object(withAuth(ctx), &api.ObjectRequest{
 		Name: o.name,
 		Options: &api.ObjectRequest_Options{
-			Server: o.opt.Server,
-			Level:  api.Level(o.opt.Level),
+			Server: opt.Server,
+			Level:  api.Level(opt.Level),
 		},
 	})
 
@@ -47,12 +44,14 @@ func (o *Object) Create(ctx context.Context) (res gost.Result[*Object]) {
 
 // Server returns the server ID of the object.
 func (o *Object) Server() int32 {
-	return o.opt.Server
+
+	// TODO:
+	return 0
 }
 
 // Set sets the value for the key in the specified object.
 func (o *Object) Set(ctx context.Context, key, value string, opts ...SetToObjectOptions) (res gost.Result[int32]) {
-	opt := SetToObjectOptions{Server: o.opt.Server}
+	opt := SetToObjectOptions{} // Server: o.opt.Server
 
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -77,7 +76,7 @@ func (o *Object) Set(ctx context.Context, key, value string, opts ...SetToObject
 
 // Get gets the value for the key from the specified object.
 func (o *Object) Get(ctx context.Context, key string, opts ...GetFromObjectOptions) (res gost.Result[string]) {
-	opt := GetFromObjectOptions{Server: o.opt.Server}
+	opt := GetFromObjectOptions{} // Server: o.opt.Server
 
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -99,17 +98,10 @@ func (o *Object) Get(ctx context.Context, key string, opts ...GetFromObjectOptio
 }
 
 // Object returns a new or an existing object.
-func (o *Object) Object(name string, opts ...ObjectOptions) *Object {
-	opt := ObjectOptions{}
-
-	if len(opts) > 0 {
-		opt = opts[0]
-	}
-
+func (o *Object) Object(name string) *Object {
 	return &Object{
 		name: fmt.Sprint(o.name, ObjectSeparator, name),
 		cl:   o.cl,
-		opt:  opt,
 	}
 }
 
@@ -120,7 +112,7 @@ func (o *Object) Name() string {
 
 // JSON returns the object in JSON.
 func (o *Object) JSON(ctx context.Context, opts ...ObjectToJSONOptions) (res gost.Result[string]) {
-	opt := ObjectToJSONOptions{Server: o.opt.Server}
+	opt := ObjectToJSONOptions{} // Server: o.opt.Server
 
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -142,7 +134,7 @@ func (o *Object) JSON(ctx context.Context, opts ...ObjectToJSONOptions) (res gos
 
 // Size returns  the size of the object.
 func (o *Object) Size(ctx context.Context, opts ...SizeOptions) (res gost.Result[uint64]) {
-	opt := SizeOptions{Server: o.opt.Server}
+	opt := SizeOptions{} // Server: o.opt.Server
 
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -164,7 +156,7 @@ func (o *Object) Size(ctx context.Context, opts ...SizeOptions) (res gost.Result
 
 // DeleteObject deletes the object.
 func (o *Object) DeleteObject(ctx context.Context, opts ...DeleteObjectOptions) (res gost.Result[gost.Nothing]) {
-	opt := DeleteObjectOptions{Server: o.opt.Server}
+	opt := DeleteObjectOptions{} // Server: o.opt.Server
 
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -186,7 +178,7 @@ func (o *Object) DeleteObject(ctx context.Context, opts ...DeleteObjectOptions) 
 
 // Attach attaches the object to another object.
 func (o *Object) Attach(ctx context.Context, name string, opts ...AttachToObjectOptions) (res gost.Result[gost.Nothing]) {
-	opt := AttachToObjectOptions{Server: o.opt.Server}
+	opt := AttachToObjectOptions{} // Server: o.opt.Server
 
 	if len(opts) > 0 {
 		opt = opts[0]
@@ -209,7 +201,7 @@ func (o *Object) Attach(ctx context.Context, name string, opts ...AttachToObject
 
 // DeleteKey deletes the attribute from the object.
 func (o *Object) DeleteKey(ctx context.Context, key string, opts ...DeleteKeyOptions) (res gost.Result[gost.Nothing]) {
-	opt := DeleteKeyOptions{Server: o.opt.Server}
+	opt := DeleteKeyOptions{} // Server: o.opt.Server
 
 	if len(opts) > 0 {
 		opt = opts[0]
