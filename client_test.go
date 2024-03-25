@@ -153,7 +153,7 @@ func TestDeleteObject(t *testing.T) {
 	n := fmt.Sprint(num)
 	name := "TestDeleteObject" + n
 
-	indx := db.Object(ctx, name).Unwrap()
+	indx := db.Object(name)
 
 	_ = indx.Set(ctx, "key_for_delete", "value_for_delete").Unwrap()
 
@@ -161,7 +161,7 @@ func TestDeleteObject(t *testing.T) {
 
 	_ = indx.DeleteObject(ctx).Unwrap()
 
-	indx = db.Object(ctx, name).Unwrap()
+	indx = db.Object(name)
 
 	err := indx.Get(ctx, "key_for_delete").Error()
 	if !errors.Is(err, itisadb.ErrNotFound) {
@@ -171,10 +171,10 @@ func TestDeleteObject(t *testing.T) {
 	// TEST DELETE INNER OBJECT
 
 	name = "inner_object"
-	inner := indx.Object(ctx, name).Unwrap()
+	inner := indx.Object(name)
 
 	name = "more_inner_object"
-	moreInner := inner.Object(ctx, name).Unwrap()
+	moreInner := inner.Object(name)
 
 	_ = moreInner.DeleteObject(ctx).Unwrap()
 
@@ -187,7 +187,7 @@ func TestDeleteObject(t *testing.T) {
 
 	_ = inner.DeleteObject(ctx).Unwrap()
 
-	inner = indx.Object(ctx, name).Unwrap()
+	inner = indx.Object(name)
 
 	err = inner.Get(ctx, "key_for_delete").Error()
 }
@@ -200,7 +200,7 @@ func TestDeleteAttr(t *testing.T) {
 	n := fmt.Sprint(num)
 	name := "TestDeleteAttr" + n
 
-	obj := db.Object(ctx, name).Unwrap()
+	obj := db.Object(name)
 
 	_ = obj.Set(ctx, "key_for_delete", "value_for_delete").Unwrap()
 
@@ -208,7 +208,7 @@ func TestDeleteAttr(t *testing.T) {
 
 	_ = obj.DeleteKey(ctx, "key_for_delete").Unwrap()
 
-	obj = db.Object(ctx, name).Unwrap()
+	obj = db.Object(name)
 
 	err := obj.Get(ctx, "key_for_delete").Error()
 	if !errors.Is(err, itisadb.ErrNotFound) {
@@ -218,7 +218,7 @@ func TestDeleteAttr(t *testing.T) {
 	// TEST DELETE ATTR INNER OBJECT
 
 	name = "inner_object"
-	inner := obj.Object(ctx, name).Unwrap()
+	inner := obj.Object(name)
 
 	_ = inner.Set(ctx, "key_for_delete", "value_for_delete").Unwrap()
 
@@ -226,7 +226,7 @@ func TestDeleteAttr(t *testing.T) {
 
 	_ = inner.DeleteKey(ctx, "key_for_delete").Unwrap()
 
-	inner = obj.Object(ctx, name).Unwrap()
+	inner = obj.Object(name)
 
 	err = inner.Get(ctx, "key_for_delete").Error()
 
@@ -245,10 +245,10 @@ func TestAttachObject(t *testing.T) {
 	ctx := context.TODO()
 
 	originalObject := "TestAttachObject"
-	indx := db.Object(ctx, originalObject).Unwrap()
+	indx := db.Object(originalObject).Create(ctx)
 
 	attachedObject := "TestAttachObject2"
-	inner := db.Object(ctx, attachedObject).Unwrap()
+	inner := db.Object(attachedObject).Create(ctx)
 
 	if err := indx.DeleteObject(ctx).Error(); err != nil {
 		t.Fatalf("Delete object %v: %v", originalObject, err)
@@ -371,7 +371,7 @@ func TestIsObject(t *testing.T) {
 func TestSize(t *testing.T) {
 	db := itisadb.New(_ctx, ":8888").Unwrap()
 
-	object := db.Object(context.TODO(), fmt.Sprintf("%d", time.Now().Unix())).Unwrap()
+	object := db.Object(fmt.Sprintf("%d", time.Now().Unix())).Unwrap()
 
 	size := object.Size(context.TODO()).Unwrap()
 	if size != 0 {

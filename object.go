@@ -155,7 +155,7 @@ func (o *Object) Size(ctx context.Context, opts ...SizeOptions) (res gost.Result
 }
 
 // DeleteObject deletes the object.
-func (o *Object) DeleteObject(ctx context.Context, opts ...DeleteObjectOptions) (res gost.Result[gost.Nothing]) {
+func (o *Object) DeleteObject(ctx context.Context, opts ...DeleteObjectOptions) (res gost.ResultN) {
 	opt := DeleteObjectOptions{} // Server: o.opt.Server
 
 	if len(opts) > 0 {
@@ -177,7 +177,7 @@ func (o *Object) DeleteObject(ctx context.Context, opts ...DeleteObjectOptions) 
 }
 
 // Attach attaches the object to another object.
-func (o *Object) Attach(ctx context.Context, name string, opts ...AttachToObjectOptions) (res gost.Result[gost.Nothing]) {
+func (o *Object) Attach(ctx context.Context, name string, opts ...AttachToObjectOptions) (res gost.ResultN) {
 	opt := AttachToObjectOptions{} // Server: o.opt.Server
 
 	if len(opts) > 0 {
@@ -200,7 +200,7 @@ func (o *Object) Attach(ctx context.Context, name string, opts ...AttachToObject
 }
 
 // DeleteKey deletes the attribute from the object.
-func (o *Object) DeleteKey(ctx context.Context, key string, opts ...DeleteKeyOptions) (res gost.Result[gost.Nothing]) {
+func (o *Object) DeleteKey(ctx context.Context, key string, opts ...DeleteKeyOptions) (res gost.ResultN) {
 	opt := DeleteKeyOptions{} // Server: o.opt.Server
 
 	if len(opts) > 0 {

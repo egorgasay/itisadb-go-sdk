@@ -2,6 +2,7 @@ package itisadb
 
 import (
 	"context"
+
 	"github.com/egorgasay/gost"
 	api "github.com/egorgasay/itisadb-shared-proto/go"
 )
@@ -41,7 +42,7 @@ func (c *Client) SetOne(ctx context.Context, key, val string, opts ...SetOptions
 }
 
 // SetToAll sets the val for the key on all servers.
-func (c *Client) SetToAll(ctx context.Context, key, val string, opts ...SetOptions) (res gost.Result[gost.Nothing]) {
+func (c *Client) SetToAll(ctx context.Context, key, val string, opts ...SetOptions) (res gost.ResultN) {
 	opt := SetOptions{
 		Server: setToAll,
 	}
@@ -59,7 +60,7 @@ func (c *Client) SetToAll(ctx context.Context, key, val string, opts ...SetOptio
 }
 
 // SetMany sets a set of vals for gRPCis.
-func (c *Client) SetMany(ctx context.Context, kv map[string]string, opts ...SetOptions) (res gost.Result[gost.Nothing]) {
+func (c *Client) SetMany(ctx context.Context, kv map[string]string, opts ...SetOptions) (res gost.ResultN) {
 	opt := SetOptions{}
 
 	if len(opts) > 0 {
@@ -76,7 +77,7 @@ func (c *Client) SetMany(ctx context.Context, kv map[string]string, opts ...SetO
 }
 
 // SetManyOpts gets a lot of vals from gRPCis with opts.
-func (c *Client) SetManyOpts(ctx context.Context, keyValue map[string]ValueSpec) (res gost.Result[gost.Nothing]) {
+func (c *Client) SetManyOpts(ctx context.Context, keyValue map[string]ValueSpec) (res gost.ResultN) {
 	for key, val := range keyValue {
 		r := c.set(ctx, key, val.Value, val.Options)
 		if r.IsErr() {

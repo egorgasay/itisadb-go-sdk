@@ -27,7 +27,7 @@ func withAuth(ctx context.Context) context.Context {
 	return metadata.NewOutgoingContext(ctx, authMetadata)
 }
 
-func (c *Client) NewUser(ctx context.Context, login, password string, opts ...NewUserOptions) (res gost.Result[gost.Nothing]) {
+func (c *Client) NewUser(ctx context.Context, login, password string, opts ...NewUserOptions) (res gost.ResultN) {
 	opt := NewUserOptions{}
 
 	if len(opts) > 0 {
