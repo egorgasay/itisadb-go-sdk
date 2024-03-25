@@ -51,7 +51,7 @@ func (c *Client) GetOne(ctx context.Context, key string, opts ...GetOptions) (re
 // GetMany gets a lot of values from gRPCis.
 func (c *Client) GetMany(ctx context.Context, keys []string, opts ...GetOptions) (res gost.Result[map[string]Value]) {
 	if ctx.Err() != nil {
-		return res.Err(gost.NewError(0, 0, ctx.Err().Error()))
+		return res.Err(ErrContextCanceled.Extend(0, ctx.Err().Error()))
 	}
 
 	var keyValue = make(map[string]Value, 10)
@@ -76,7 +76,7 @@ func (c *Client) GetMany(ctx context.Context, keys []string, opts ...GetOptions)
 // GetManyOpts gets a lot of values from gRPCis with opts.
 func (c *Client) GetManyOpts(ctx context.Context, keys []KeySpec) (res gost.Result[map[string]Value]) {
 	if ctx.Err() != nil {
-		return res.Err(gost.NewError(0, 0, ctx.Err().Error()))
+		return res.Err(ErrContextCanceled.Extend(0, ctx.Err().Error()))
 	}
 
 	var keyValue = make(map[string]Value, 10)

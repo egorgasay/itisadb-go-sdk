@@ -6,7 +6,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-func (c *Client) del(ctx context.Context, key string, opts DeleteOptions) (res gost.Result[gost.Nothing]) {
+func (c *Client) del(ctx context.Context, key string, opts DeleteOptions) (res gost.ResultN) {
 	_, err := c.cl.Delete(withAuth(ctx), &api.DeleteRequest{
 		Key:     key,
 		Options: &api.DeleteRequest_Options{Server: opts.Server},
@@ -16,10 +16,10 @@ func (c *Client) del(ctx context.Context, key string, opts DeleteOptions) (res g
 		return res.Err(errFromGRPCError(err))
 	}
 
-	return res.Ok(gost.Nothing{})
+	return res.Ok()
 }
 
-func (c *Client) DelOne(ctx context.Context, key string, opts ...DeleteOptions) gost.Result[gost.Nothing] {
+func (c *Client) DelOne(ctx context.Context, key string, opts ...DeleteOptions) gost.ResultN {
 	opt := DeleteOptions{}
 
 	if len(opts) > 0 {

@@ -3,14 +3,14 @@ module github.com/egorgasay/itisadb-go-sdk
 go 1.21.0
 
 require (
-	github.com/egorgasay/gost v0.0.22
+	github.com/egorgasay/gost v0.0.34
+	github.com/egorgasay/itisadb-shared-proto/go v0.0.0-20240107134715-1467774df2f3
 	golang.org/x/net v0.19.0
 	google.golang.org/grpc v1.60.1
 )
 
 require (
 	github.com/egorgasay/itisadb-shared-proto v0.9.0 // indirect
-	github.com/egorgasay/itisadb-shared-proto/go v0.0.0-20240107134715-1467774df2f3 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

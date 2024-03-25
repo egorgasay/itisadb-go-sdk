@@ -2,7 +2,6 @@ package itisadb
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/egorgasay/gost"
 	api "github.com/egorgasay/itisadb-shared-proto/go"
@@ -67,7 +66,7 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (res gost.Resul
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		return res.Err(gost.NewError(0, 0, err.Error()))
+		return res.Err(gost.NewErrX(0, "grpc dial failed").Extend(0, err.Error()))
 	}
 
 	client := api.NewItisaDBClient(conn)
@@ -78,7 +77,7 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (res gost.Resul
 	})
 
 	if err != nil {
-		return res.Err(gost.NewError(0, 0, fmt.Sprintf("failed to authenticate: %s", err)))
+		return res.Err(gost.NewErrX(0, "auth failed").Extend(0, err.Error()))
 	}
 
 	authMetadata.Set(token, resp.Token)
@@ -88,3 +87,15 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (res gost.Resul
 		token: resp.Token,
 	})
 }
+
+//type Error struct {
+//	*gost.ErrX
+//}
+//
+//const (
+//	NotFound = iota
+//)
+//
+//func (e *Error) IsNotFound() bool {
+//	return e.BaseCode() == NotFound
+//}
