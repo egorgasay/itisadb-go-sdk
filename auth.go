@@ -47,7 +47,7 @@ func (c *Client) NewUser(ctx context.Context, login, password string, opts ...Ne
 		return res.Err(err)
 	}
 
-	return res.Ok(gost.Nothing{})
+	return res.Ok()
 }
 
 func (c *Client) DeleteUser(ctx context.Context, login string) (res gost.Result[bool]) {

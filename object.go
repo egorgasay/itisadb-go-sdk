@@ -173,7 +173,7 @@ func (o *Object) DeleteObject(ctx context.Context, opts ...DeleteObjectOptions) 
 		return res.Err(errFromGRPCError(err))
 	}
 
-	return res.Ok(gost.Nothing{})
+	return res.Ok()
 }
 
 // Attach attaches the object to another object.
@@ -196,7 +196,7 @@ func (o *Object) Attach(ctx context.Context, name string, opts ...AttachToObject
 		return res.Err(errFromGRPCError(err))
 	}
 
-	return res.Ok(gost.Nothing{})
+	return res.Ok()
 }
 
 // DeleteKey deletes the attribute from the object.
@@ -219,7 +219,7 @@ func (o *Object) DeleteKey(ctx context.Context, key string, opts ...DeleteKeyOpt
 		return res.Err(errFromGRPCError(err))
 	}
 
-	return res.Ok(gost.Nothing{})
+	return res.Ok()
 }
 
 // Is checks if it is an object or not.

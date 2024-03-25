@@ -56,7 +56,7 @@ func (c *Client) SetToAll(ctx context.Context, key, val string, opts ...SetOptio
 		return res.Err(r.Error())
 	}
 
-	return res.Ok(gost.Nothing{})
+	return res.Ok()
 }
 
 // SetMany sets a set of vals for gRPCis.
@@ -73,7 +73,7 @@ func (c *Client) SetMany(ctx context.Context, kv map[string]string, opts ...SetO
 			return res.Err(r.Error())
 		}
 	}
-	return res.Ok(gost.Nothing{})
+	return res.Ok()
 }
 
 // SetManyOpts gets a lot of vals from gRPCis with opts.
@@ -84,5 +84,5 @@ func (c *Client) SetManyOpts(ctx context.Context, keyValue map[string]ValueSpec)
 			return res.Err(r.Error())
 		}
 	}
-	return res.Ok(gost.Nothing{})
+	return res.Ok()
 }
