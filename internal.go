@@ -36,9 +36,10 @@ func (i *internal) GetLastUserChangeID(ctx context.Context, c *Client) (res gost
 	return res.Ok(r.LastChangeID)
 }
 
-func (i *internal) Sync(ctx context.Context, c *Client, users []Internal_User) (res gost.ResultN) {
+func (i *internal) Sync(ctx context.Context, c *Client, syncID uint64, users []Internal_User) (res gost.ResultN) {
 	_, err := c.cl.Sync(withAuth(ctx), &api.SyncData{
-		Users: apiUsersFromInternalUsers(users),
+		Users:  apiUsersFromInternalUsers(users),
+		SyncID: syncID,
 	})
 
 	if err != nil {
