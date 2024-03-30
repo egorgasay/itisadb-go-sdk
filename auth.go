@@ -19,6 +19,14 @@ const (
 // TODO: refactor
 var authMetadata = metadata.New(map[string]string{token: ""})
 
+type Internal_User struct {
+	ID       int
+	Login    string
+	Password string
+	Level    Level
+	Active   bool
+}
+
 func withAuth(ctx context.Context) context.Context {
 	if v, ok := metadata.FromOutgoingContext(ctx); ok && len(v.Get(token)) > 0 {
 		return ctx
@@ -91,4 +99,39 @@ func (c *Client) ChangeLevel(ctx context.Context, login string, level Level) (re
 	}
 
 	return res.Ok()
+}
+
+func GetLastUserChangeID(ctx context.Context, c *Client) (res gost.Result[uint64]) {
+	r, err := c.cl.GetLastUserChangeID(withAuth(ctx), &api.GetLastUserChangeIDRequest{})
+	if err != nil {
+		return res.Err(errFromGRPCError(err))
+	}
+
+	return res.Ok(r.LastChangeID)
+}
+
+func Sync(ctx context.Context, c *Client, users []Internal_User) (res gost.ResultN) {
+	_, err := c.cl.Sync(withAuth(ctx), &api.SyncData{
+		Users: apiUsersFromInternalUsers(users),
+	})
+
+	if err != nil {
+		return res.Err(errFromGRPCError(err))
+	}
+
+	return res.Ok()
+}
+
+func apiUsersFromInternalUsers(users []Internal_User) []*api.User {
+	var out []*api.User
+	for _, u := range users {
+		out = append(out, &api.User{
+			Id:       uint64(u.ID),
+			Login:    u.Login,
+			Password: u.Password,
+			Level:    uint32(u.Level),
+			Active:   u.Active,
+		})
+	}
+	return out
 }
