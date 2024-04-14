@@ -27,10 +27,14 @@ func TestSetGetOne(t *testing.T) {
 		t.Fatal(r.Error())
 	}
 
-	get := db.GetOne(ctx, "qwe").Unwrap()
+	r = db.SetOne(ctx, "qwe", "111")
+	if r.Error() != nil {
+		t.Fatal(r.Error())
+	}
 
-	if get.Value != "111" {
-		t.Fatal("Wrong value")
+	r = db.SetOne(ctx, "qwe", "111")
+	if r.Error() != nil {
+		t.Fatal(r.Error())
 	}
 }
 
@@ -39,7 +43,7 @@ func TestSetGetOne(t *testing.T) {
 func TestSetToAllGet(t *testing.T) {
 	db := itisadb.New(_ctx, ":8888").Unwrap()
 	ctx := context.TODO()
-	_ = db.SetToAll(ctx, "all_key", "qqq").Unwrap()
+	db.SetToAll(ctx, "all_key", "qqq").Unwrap()
 	get := db.GetOne(ctx, "all_key").Unwrap()
 
 	want := "qqq"
@@ -62,7 +66,7 @@ func TestSetManyGetMany(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	_ = db.SetMany(ctx, m).Unwrap()
+	db.SetMany(ctx, m).Unwrap()
 
 	get := db.GetOne(ctx, "m2").Unwrap()
 
@@ -100,7 +104,7 @@ func TestSetManyOptsGetManyOpts(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	_ = db.SetManyOpts(ctx, m).Unwrap()
+	db.SetManyOpts(ctx, m).Unwrap()
 
 	get := db.GetOne(ctx, "mo2").Unwrap()
 
@@ -159,7 +163,7 @@ func TestDeleteObject(t *testing.T) {
 
 	_ = indx.Get(ctx, "key_for_delete").Unwrap()
 
-	_ = indx.DeleteObject(ctx).Unwrap()
+	indx.DeleteObject(ctx).Unwrap()
 
 	indx = db.Object(name)
 
@@ -176,16 +180,16 @@ func TestDeleteObject(t *testing.T) {
 	name = "more_inner_object"
 	moreInner := inner.Object(name)
 
-	_ = moreInner.DeleteObject(ctx).Unwrap()
+	moreInner.DeleteObject(ctx).Unwrap()
 
 	err = inner.Set(ctx, "key_for_delete", "value_for_delete").Error()
 	if err != nil {
 		t.Fatalf("Inner object %v: %v", name, err)
 	}
 
-	_ = inner.Get(ctx, "key_for_delete").Unwrap()
+	inner.Get(ctx, "key_for_delete").Unwrap()
 
-	_ = inner.DeleteObject(ctx).Unwrap()
+	inner.DeleteObject(ctx).Unwrap()
 
 	inner = indx.Object(name)
 
@@ -202,11 +206,11 @@ func TestDeleteAttr(t *testing.T) {
 
 	obj := db.Object(name)
 
-	_ = obj.Set(ctx, "key_for_delete", "value_for_delete").Unwrap()
+	obj.Set(ctx, "key_for_delete", "value_for_delete").Unwrap()
 
-	_ = obj.Get(ctx, "key_for_delete").Unwrap()
+	obj.Get(ctx, "key_for_delete").Unwrap()
 
-	_ = obj.DeleteKey(ctx, "key_for_delete").Unwrap()
+	obj.DeleteKey(ctx, "key_for_delete").Unwrap()
 
 	obj = db.Object(name)
 
@@ -220,11 +224,11 @@ func TestDeleteAttr(t *testing.T) {
 	name = "inner_object"
 	inner := obj.Object(name)
 
-	_ = inner.Set(ctx, "key_for_delete", "value_for_delete").Unwrap()
+	inner.Set(ctx, "key_for_delete", "value_for_delete").Unwrap()
 
-	_ = inner.Get(ctx, "key_for_delete").Unwrap()
+	inner.Get(ctx, "key_for_delete").Unwrap()
 
-	_ = inner.DeleteKey(ctx, "key_for_delete").Unwrap()
+	inner.DeleteKey(ctx, "key_for_delete").Unwrap()
 
 	inner = obj.Object(name)
 
@@ -245,10 +249,12 @@ func TestAttachObject(t *testing.T) {
 	ctx := context.TODO()
 
 	originalObject := "TestAttachObject"
-	indx := db.Object(originalObject).Create(ctx)
+	indx := db.Object(originalObject)
+	indx.Create(ctx).Unwrap()
 
 	attachedObject := "TestAttachObject2"
-	inner := db.Object(attachedObject).Create(ctx)
+	inner := db.Object(attachedObject)
+	inner.Create(ctx).Unwrap()
 
 	if err := indx.DeleteObject(ctx).Error(); err != nil {
 		t.Fatalf("Delete object %v: %v", originalObject, err)
@@ -259,18 +265,21 @@ func TestAttachObject(t *testing.T) {
 	}
 
 	originalObject = "TestAttachObject"
-	indx = db.Object(ctx, originalObject).Unwrap()
+	indx = db.Object(originalObject)
+	indx.Create(ctx).Unwrap()
 
 	attachedObject = "TestAttachObject2"
-	inner = db.Object(ctx, attachedObject).Unwrap()
+	inner = db.Object(attachedObject)
+	inner.Create(ctx).Unwrap()
 
-	_ = inner.Set(ctx, "key_for_attach", "value_for_attach").Unwrap()
+	inner.Set(ctx, "key_for_attach", "value_for_attach").Unwrap()
 
-	_ = indx.Attach(ctx, inner.Name()).Unwrap()
+	indx.Attach(ctx, inner.Name()).Unwrap()
 
-	innerCopy := indx.Object(ctx, attachedObject).Unwrap()
+	innerCopy := indx.Object(attachedObject)
+	innerCopy.Create(ctx).Unwrap()
 
-	_ = innerCopy.Set(ctx, "key_for_attach3", "value_for_attach3").Unwrap()
+	innerCopy.Set(ctx, "key_for_attach3", "value_for_attach3").Unwrap()
 	_ = inner.Set(ctx, "key_for_attach4", "value_for_attach4").Unwrap()
 
 	originalAttached := inner.JSON(ctx).Unwrap()
@@ -285,9 +294,10 @@ func TestAttachObject(t *testing.T) {
 func TestSetGetOneFromObject(t *testing.T) {
 	db := itisadb.New(_ctx, ":8888").Unwrap()
 
-	object := db.Object(context.TODO(), "User").Unwrap()
+	object := db.Object("User")
+	object.Create(context.TODO()).Unwrap()
 
-	_ = object.Set(context.TODO(), "Name", "Max").Unwrap()
+	object.Set(context.TODO(), "Name", "Max").Unwrap()
 
 	value := object.Get(context.TODO(), "Name").Unwrap()
 
@@ -297,9 +307,10 @@ func TestSetGetOneFromObject(t *testing.T) {
 
 	/// CAR
 
-	car := db.Object(context.TODO(), "Car").Unwrap()
+	car := db.Object("Car")
+	car.Create(context.TODO()).Unwrap()
 
-	_ = car.Set(context.TODO(), "Name", "MyCar").Unwrap()
+	car.Set(context.TODO(), "Name", "MyCar").Unwrap()
 
 	value = car.Get(context.TODO(), "Name").Unwrap()
 
@@ -309,7 +320,7 @@ func TestSetGetOneFromObject(t *testing.T) {
 
 	/// WHEEL
 
-	wheel := car.Object(context.TODO(), "Wheel").Unwrap()
+	wheel := car.Object("Wheel").Create(context.TODO()).Unwrap()
 
 	_ = wheel.Set(context.TODO(), "Color", "Black").Unwrap()
 
@@ -321,7 +332,7 @@ func TestSetGetOneFromObject(t *testing.T) {
 
 	/// TRAILER
 
-	trailer := car.Object(context.TODO(), "Trailer").Unwrap()
+	trailer := car.Object("Trailer").Create(context.TODO()).Unwrap()
 
 	trailer.Set(context.TODO(), "Color", "Red").Unwrap()
 
@@ -345,25 +356,25 @@ func TestIsObject(t *testing.T) {
 	db := itisadb.New(_ctx, ":8888").Unwrap()
 
 	name := fmt.Sprintf("%d", time.Now().Unix())
-	object := db.Object(context.TODO(), name).Unwrap()
+	object := db.Object(name).Create(context.TODO()).Unwrap()
 
 	time.Sleep(time.Second)
 
 	ctx := context.TODO()
-	if ok := db.IsObject(ctx, object.Name()).Unwrap(); !ok {
+	if ok := object.Is(ctx).Unwrap(); !ok {
 		t.Fatal("Not an object, but should be")
 	}
 
 	name = fmt.Sprintf("%d", time.Now().Unix())
-	newObject := object.Object(ctx, object.Name()).Unwrap()
+	newObject := object.Object(object.Name()).Create(context.TODO()).Unwrap()
 
 	time.Sleep(time.Second)
 
-	if ok := db.IsObject(ctx, newObject.Name()).Unwrap(); !ok {
+	if ok := newObject.Is(ctx).Unwrap(); !ok {
 		t.Fatal("Not an object, but should be")
 	}
 
-	if ok := db.IsObject(ctx, fmt.Sprintf("%d", time.Now().Unix())).Unwrap(); ok {
+	if ok := object.Object(fmt.Sprintf("%d", time.Now().Unix())).Is(ctx).Unwrap(); ok {
 		t.Fatal("Object, but should not be")
 	}
 }
@@ -371,7 +382,7 @@ func TestIsObject(t *testing.T) {
 func TestSize(t *testing.T) {
 	db := itisadb.New(_ctx, ":8888").Unwrap()
 
-	object := db.Object(fmt.Sprintf("%d", time.Now().Unix())).Unwrap()
+	object := db.Object(fmt.Sprintf("%d", time.Now().Unix())).Create(context.TODO()).Unwrap()
 
 	size := object.Size(context.TODO()).Unwrap()
 	if size != 0 {
@@ -396,7 +407,7 @@ func TestGetObject(t *testing.T) {
 	time.Sleep(time.Second)
 
 	name := fmt.Sprintf("%d", time.Now().Unix())
-	object := db.Object(context.TODO(), name).Unwrap()
+	object := db.Object(name).Create(context.TODO()).Unwrap()
 
 	data := map[string]string{
 		"key1": "value1",
@@ -892,13 +903,9 @@ func TestClient_ChangeLevel(t *testing.T) {
 	}
 
 	// Create "max" with default level
-	res := db.Object(ctx, "max", itisadb.ObjectOptions{
+	_ = db.Object("max").Create(ctx, itisadb.ObjectOptions{
 		Level: itisadb.DefaultLevel,
-	})
-
-	if res.Error() != nil {
-		t.Fatalf("Object: %v", res.Error())
-	}
+	}).Unwrap()
 
 	// Change "max" to restricted level
 	err = db.ChangeLevel(ctx, "max", itisadb.RestrictedLevel).Error()
@@ -907,11 +914,7 @@ func TestClient_ChangeLevel(t *testing.T) {
 		return
 	}
 
-	res = db.Object(ctx, "max", itisadb.ObjectOptions{
+	_ = db.Object("max").Create(ctx, itisadb.ObjectOptions{
 		Level: itisadb.DefaultLevel,
-	})
-
-	if res.Error() != nil {
-		t.Fatalf("Object: %v", res.Error())
-	}
+	}).Unwrap()
 }

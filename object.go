@@ -9,8 +9,10 @@ import (
 )
 
 type Object struct {
-	name string
-	cl   api.ItisaDBClient
+	// todo: add mutex??
+	name   string
+	server int32
+	cl     api.ItisaDBClient
 }
 
 func (c *Client) Object(name string) *Object {
@@ -20,7 +22,7 @@ func (c *Client) Object(name string) *Object {
 	}
 }
 
-func (o *Object) Create(ctx context.Context, opts ...ObjectOptions) (res gost.Result[int32]) {
+func (o *Object) Create(ctx context.Context, opts ...ObjectOptions) (res gost.Result[*Object]) {
 	opt := ObjectOptions{}
 
 	if len(opts) > 0 {
@@ -39,14 +41,14 @@ func (o *Object) Create(ctx context.Context, opts ...ObjectOptions) (res gost.Re
 		return res.Err(errFromGRPCError(err))
 	}
 
-	return res.Ok(r.Server)
+	o.server = r.Server
+
+	return res.Ok(o)
 }
 
 // Server returns the server ID of the object.
 func (o *Object) Server() int32 {
-
-	// TODO:
-	return 0
+	return o.server
 }
 
 // Set sets the value for the key in the specified object.

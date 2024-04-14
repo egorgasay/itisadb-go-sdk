@@ -77,7 +77,7 @@ func New(ctx context.Context, balancerIP string, conf ...Config) (res gost.Resul
 	})
 
 	if err != nil {
-		return res.Err(gost.NewErrX(0, "auth failed").Extend(0, err.Error()))
+		return res.Err(errFromGRPCError(err))
 	}
 
 	authMetadata.Set(token, resp.Token)

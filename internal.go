@@ -49,6 +49,18 @@ func (i *internal) Sync(ctx context.Context, c *Client, syncID uint64, users []I
 	return res.Ok()
 }
 
+func (i *internal) AddServer(ctx context.Context, c *Client, address string) (res gost.ResultN) {
+	_, err := c.cl.AddServer(withAuth(ctx), &api.AddServerRequest{
+		Address: address,
+	})
+
+	if err != nil {
+		return res.Err(errFromGRPCError(err))
+	}
+
+	return res.Ok()
+}
+
 func apiUsersFromInternalUsers(users []Internal_User) []*api.User {
 	var out []*api.User
 	for _, u := range users {

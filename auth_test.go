@@ -13,7 +13,6 @@ func Test_withAuth(t *testing.T) {
 	authMetadata = metadata.New(map[string]string{token: "XXX"})
 
 	ctx := metadata.NewOutgoingContext(context.TODO(), authMetadata)
-
 	got := withAuth(ctx)
 
 	t.Log(got)
@@ -24,7 +23,7 @@ func Test_withAuth(t *testing.T) {
 
 func TestAuth(t *testing.T) {
 	ctx := context.Background()
-	cl := New(ctx, ":8888").Unwrap()
+	cl := New(ctx, ":8833").Unwrap()
 
 	// method that requires auth
 	resp, err := cl.cl.Servers(withAuth(ctx), &api.ServersRequest{})
@@ -34,4 +33,13 @@ func TestAuth(t *testing.T) {
 
 	t.Log("Auth OK")
 	t.Log(resp.ServersInfo)
+
+	err = New(ctx, ":8833", Config{Credentials: Credentials{
+		Login:    "ddq",
+		Password: "qwdqd",
+	}}).Error()
+
+	if err == nil {
+		t.Fatalf("should fail")
+	}
 }

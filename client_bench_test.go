@@ -104,7 +104,8 @@ func BenchmarkSetToObjectRPS(b *testing.B) {
 	db := itisadb.New(_ctx, ":800").Unwrap()
 
 	ctx := context.Background()
-	ind := db.Object(ctx, "User1").Unwrap()
+	ind := db.Object("User1")
+	ind.Create(ctx).Unwrap()
 
 	start := time.Now()
 	mail := ind.Get(ctx, "Email").Unwrap()
@@ -126,12 +127,8 @@ func BenchmarkGetFromObjectRPS2(b *testing.B) {
 	b.Log("RPS:", maxRPS)
 
 	ctx := context.TODO()
-	res := db.Object(ctx, "User")
-	if res.IsErr() {
-		b.Log(res.Error(), "[User]")
-		return
-	}
-	ind := res.Unwrap()
+	ind := db.Object("User")
+	ind.Create(ctx).Unwrap()
 
 	var ints = make([]string, maxRPS)
 	for i := 0; i < maxRPS; i++ {
@@ -187,7 +184,8 @@ func BenchmarkSetToObjectRPS2(b *testing.B) {
 	b.Log("RPS:", maxRPS)
 
 	ctx := context.TODO()
-	ind := db.Object(ctx, "User").Unwrap()
+	ind := db.Object("User")
+	ind.Create(ctx).Unwrap()
 
 	var ints = make([]string, maxRPS)
 	for i := 0; i < maxRPS; i++ {
