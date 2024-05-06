@@ -20,7 +20,6 @@ const (
 var authMetadata = metadata.New(map[string]string{token: ""})
 
 type Internal_User struct {
-	ID       int
 	Login    string
 	Password string
 	Level    Level

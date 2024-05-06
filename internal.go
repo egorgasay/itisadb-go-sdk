@@ -65,7 +65,6 @@ func apiUsersFromInternalUsers(users []Internal_User) []*api.User {
 	var out []*api.User
 	for _, u := range users {
 		out = append(out, &api.User{
-			Id:       uint64(u.ID),
 			Login:    u.Login,
 			Password: u.Password,
 			Level:    uint32(u.Level),
