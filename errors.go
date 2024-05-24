@@ -28,7 +28,7 @@ func errFromGRPCError(err error) *gost.ErrX {
 		return gost.NewErrX(
 			0,
 			"unknown error",
-		).ExtendMsg(fmt.Sprintf(err.Error()))
+		).ExtendMsg(fmt.Sprint(err.Error()))
 	}
 
 	switch st.Code() {
@@ -48,6 +48,6 @@ func errFromGRPCError(err error) *gost.ErrX {
 		return gost.NewErrX(
 			0,
 			"unknown error",
-		).ExtendMsg(fmt.Sprintf(err.Error()))
+		).ExtendMsg(fmt.Sprint(err.Error()))
 	}
 }

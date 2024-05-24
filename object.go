@@ -3,15 +3,15 @@ package itisadb
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 
 	"github.com/egorgasay/gost"
 	api "github.com/egorgasay/itisadb-shared-proto/go"
 )
 
 type Object struct {
-	// todo: add mutex??
 	name   string
-	server int32
+	server atomic.Int32
 	cl     api.ItisaDBClient
 }
 
@@ -41,14 +41,14 @@ func (o *Object) Create(ctx context.Context, opts ...ObjectOptions) (res gost.Re
 		return res.Err(errFromGRPCError(err))
 	}
 
-	o.server = r.Server
+	o.server.Store(r.GetServer())
 
 	return res.Ok(o)
 }
 
 // Server returns the server ID of the object.
 func (o *Object) Server() int32 {
-	return o.server
+	return o.server.Load()
 }
 
 // Set sets the value for the key in the specified object.
